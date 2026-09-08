@@ -45,9 +45,6 @@ export default defineConfig(async () => {
   const { cloudflare } = await import('@cloudflare/vite-plugin');
 
   return {
-    // GitHub Pages serves this project beneath the repository name. Keep local
-    // development at the root while making production asset URLs portable.
-    base: process.env.GITHUB_ACTIONS ? '/beef-chain-simulator/' : '/',
     css: { postcss: { plugins: [tailwindcss()] } },
     server: isCodexSeatbeltSandbox
       ? { watch: { useFsEvents: false, usePolling: true } }
