@@ -215,10 +215,10 @@ function simulateTrial(input: ScenarioInput, trialIndex: number, deterministic =
           ? input.calfPricePerCwt * calfShock
           : key === 'stocker'
             ? input.feederPricePerCwt * feederShock
-            : key === 'feedlot'
-              ? input.fedPricePerCwt * fedShock
-              : input.retailPricePerLb * retailShock * 100 / Math.max(input.dressingPercentage * input.saleableYield, 0.01);
-        const terminalValue = (exitWeight / 100) * phasePrice;
+            : input.fedPricePerCwt * fedShock;
+        const terminalValue = key === 'downstream'
+          ? exitWeight * input.dressingPercentage * input.saleableYield * input.retailPricePerLb * retailShock + input.byproductCreditPerHead
+          : (exitWeight / 100) * phasePrice;
         ledger.terminalInventoryValue += terminalValue * weight;
         ledger.endingInventoryHead += weight;
         endingInventoryHead += weight;
@@ -273,12 +273,15 @@ function simulateTrial(input: ScenarioInput, trialIndex: number, deterministic =
 
   const chainEconomicProfit = PHASES.reduce((sum, key) => sum + phases[key].economicProfit, 0);
   const chainOperatingContribution = PHASES.reduce((sum, key) => sum + phases[key].operatingContribution, 0);
-  const realizedTotals = PHASES.map((key) => phases[key].economicProfit);
-  const realizedDenominator = realizedTotals.reduce((sum, value) => sum + Math.abs(value), 0) || 1;
-  for (const month of monthly) {
-    for (let index = 0; index < PHASES.length; index += 1) {
-      month[PHASES[index]] = chainEconomicProfit * (Math.abs(realizedTotals[index]) / realizedDenominator) / input.horizonMonths;
+  for (const key of PHASES) {
+    const activity = monthly.reduce((sum, month) => sum + month[key], 0);
+    if (activity > 0) {
+      for (const month of monthly) month[key] = phases[key].economicProfit * (month[key] / activity);
+    } else {
+      monthly[monthly.length - 1][key] = phases[key].economicProfit;
     }
+  }
+  for (const month of monthly) {
     month.chain = PHASES.reduce((sum, key) => sum + month[key], 0);
   }
 
@@ -339,7 +342,7 @@ function aggregate(input: ScenarioInput, trials: TrialResult[], runtimeMs: numbe
   const endingInventoryHead = Math.max(0, input.totalHead - completedHead - mortalityHead);
   const retailPounds = percentile(trials.map((trial) => trial.retailPounds), 0.5);
   const fedCwt = percentile(trials.map((trial) => trial.fedLiveCwtSold), 0.5);
-  const sensitivity = buildSensitivity(input, chainEconomicProfit);
+  const sensitivity = buildSensitivity(input);
 
   return {
     scenario: input,
@@ -364,7 +367,7 @@ function aggregate(input: ScenarioInput, trials: TrialResult[], runtimeMs: numbe
   };
 }
 
-function buildSensitivity(input: ScenarioInput, baseProfit: number): SensitivityResult[] {
+function buildSensitivity(input: ScenarioInput): SensitivityResult[] {
   const drivers: Array<{ key: string; label: string; apply: (scenario: ScenarioInput, factor: number) => void }> = [
     { key: 'retailPrice', label: 'Retail beef price', apply: (scenario, factor) => { scenario.retailPricePerLb *= factor; } },
     { key: 'fedPrice', label: 'Fed cattle price', apply: (scenario, factor) => { scenario.fedPricePerCwt *= factor; } },
@@ -385,7 +388,7 @@ function buildSensitivity(input: ScenarioInput, baseProfit: number): Sensitivity
       label: driver.label,
       lowEconomicProfit: lowProfit,
       highEconomicProfit: highProfit,
-      swing: Math.max(Math.abs(lowProfit - baseProfit), Math.abs(highProfit - baseProfit)),
+      swing: Math.abs(highProfit - lowProfit) / 2,
     };
   }).sort((a, b) => b.swing - a.swing);
 }
