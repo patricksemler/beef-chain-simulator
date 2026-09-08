@@ -1,33 +1,15 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Manrope, Source_Sans_3 } from 'next/font/google';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+const manrope = Manrope({ variable: '--font-manrope', subsets: ['latin'] });
+const sourceSans = Source_Sans_3({ variable: '--font-source-sans', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Untitled site',
+  title: 'Beef Chain Simulator',
+  description: 'Explore U.S. beef supply chain economics from cow-calf through packer and retail.',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return <html lang="en"><body className={`${manrope.variable} ${sourceSans.variable} antialiased`}>{children}</body></html>;
 }
