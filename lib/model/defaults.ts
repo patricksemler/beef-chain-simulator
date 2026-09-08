@@ -32,6 +32,7 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   customCadence: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   seed: 2025,
   trials: 250,
+  biologicalVariation: 0.07,
   startWeight: 85,
   calfPricePerCwt: 345,
   feederPricePerCwt: 301,

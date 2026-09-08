@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+// oxlint-disable-next-line import/default -- Vite's ?worker loader provides the constructor.
+import SimulationWorker from '../../workers/simulation.worker.ts?worker';
 import { cloneDefaultScenario } from './defaults';
 import type { EntryCadence, ScenarioInput, SimulationSummary } from './types';
 
@@ -40,7 +42,8 @@ export function useSimulation() {
   }, []);
 
   useEffect(() => {
-    const worker = new Worker(new URL('../../workers/simulation.worker.ts', import.meta.url), { type: 'module' });
+    const worker = new SimulationWorker();
+    const pendingRuns = pendingRef.current;
     workerRef.current = worker;
     worker.onmessage = (event) => {
       const pending = pendingRef.current.get(event.data.requestId);
@@ -67,8 +70,8 @@ export function useSimulation() {
     void runScenario(cloneDefaultScenario());
     return () => {
       worker.terminate();
-      for (const pending of pendingRef.current.values()) pending.reject(new Error('Simulation cancelled.'));
-      pendingRef.current.clear();
+      for (const pending of pendingRuns.values()) pending.reject(new Error('Simulation cancelled.'));
+      pendingRuns.clear();
     };
   }, [runScenario]);
 

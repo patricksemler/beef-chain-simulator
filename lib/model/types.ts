@@ -33,6 +33,7 @@ export interface ScenarioInput {
   customCadence: number[];
   seed: number;
   trials: number;
+  biologicalVariation: number;
   startWeight: number;
   calfPricePerCwt: number;
   feederPricePerCwt: number;

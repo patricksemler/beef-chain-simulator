@@ -77,6 +77,9 @@ export function validateScenario(input: ScenarioInput) {
   if (!Number.isInteger(input.trials) || input.trials < 1 || input.trials > 500) {
     errors.push('Trials must be between 1 and 500.');
   }
+  if (input.biologicalVariation < 0 || input.biologicalVariation > 1) {
+    errors.push('Biological variation must be between 0% and 100%.');
+  }
   if (input.customCadence.length !== 12 || input.customCadence.some((value) => value < 0)) {
     errors.push('Custom cadence must contain 12 non-negative monthly weights.');
   }
@@ -107,7 +110,7 @@ export function allocateEntryMonths(input: Pick<ScenarioInput, 'totalHead' | 'ho
   const totalWeight = monthWeights.reduce((sum, value) => sum + value, 0);
   const raw = monthWeights.map((value) => (value / totalWeight) * input.totalHead);
   const allocated = raw.map(Math.floor);
-  let remaining = input.totalHead - allocated.reduce((sum, value) => sum + value, 0);
+  const remaining = input.totalHead - allocated.reduce((sum, value) => sum + value, 0);
   const remainderOrder = raw
     .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
     .sort((a, b) => b.fraction - a.fraction);
@@ -182,7 +185,7 @@ function simulateTrial(input: ScenarioInput, trialIndex: number, deterministic =
     const targetHead = (agent + 0.5) * weight;
     const entryMonth = entryCumulative.findIndex((value) => targetHead < value);
     let currentMonth = Math.max(0, entryMonth);
-    let liveWeight = input.startWeight * (deterministic ? 1 : clamp(1 + normal(random) * 0.06, 0.8, 1.2));
+    let liveWeight = input.startWeight * (deterministic ? 1 : clamp(1 + normal(random) * input.biologicalVariation * 0.85, 0.8, 1.2));
     let acquisitionValue = 0;
     let isFinished = false;
     let isDead = false;
@@ -194,13 +197,13 @@ function simulateTrial(input: ScenarioInput, trialIndex: number, deterministic =
       ledger.enteredHead += weight;
       ledger.acquisitionCost += acquisitionValue * weight;
 
-      const durationFactor = deterministic ? 1 : clamp(1 + normal(random) * 0.07, 0.78, 1.22);
+      const durationFactor = deterministic ? 1 : clamp(1 + normal(random) * input.biologicalVariation, 0.78, 1.22);
       const durationDays = Math.max(0, phase.durationDays * durationFactor);
       const durationMonths = durationDays / MONTH_DAYS;
       const availableMonths = input.horizonMonths - currentMonth;
       const completionRatio = clamp(availableMonths / Math.max(durationMonths, 0.001), 0, 1);
       const daysInPhase = durationDays * completionRatio;
-      const gainFactor = deterministic ? 1 : clamp(1 + normal(random) * 0.05, 0.82, 1.18);
+      const gainFactor = deterministic ? 1 : clamp(1 + normal(random) * input.biologicalVariation * 0.7, 0.82, 1.18);
       const exitWeight = liveWeight + phase.averageDailyGain * daysInPhase * gainFactor;
       const stageDirectCost = phase.directCostPerHead * completionRatio + phase.dailyCostPerHead * daysInPhase;
       const feedCost = key === 'feedlot'
@@ -259,7 +262,7 @@ function simulateTrial(input: ScenarioInput, trialIndex: number, deterministic =
       ledger.revenue += saleValue * weight;
       acquisitionValue = saleValue;
       liveWeight = exitWeight;
-      const contribution = (saleValue - acquisitionValue * 0) * weight;
+      const contribution = saleValue * weight;
       monthly[resultMonth][key] += contribution;
     }
   }
@@ -304,16 +307,22 @@ function aggregate(input: ScenarioInput, trials: TrialResult[], runtimeMs: numbe
   for (const key of PHASES) {
     const economicProfits = trials.map((trial) => trial.phases[key].economicProfit);
     const base = medianTrial.phases[key];
-    const economicProfit = percentile(economicProfits, 0.5);
+    const medianRevenue = percentile(trials.map((trial) => trial.phases[key].revenue), 0.5);
+    const medianTerminalValue = percentile(trials.map((trial) => trial.phases[key].terminalInventoryValue), 0.5);
+    const medianAcquisitionCost = percentile(trials.map((trial) => trial.phases[key].acquisitionCost), 0.5);
+    const medianDirectCosts = percentile(trials.map((trial) => trial.phases[key].directCosts), 0.5);
+    const medianEconomicCosts = percentile(trials.map((trial) => trial.phases[key].economicCosts), 0.5);
+    const operatingContribution = medianRevenue + medianTerminalValue - medianAcquisitionCost - medianDirectCosts;
+    const economicProfit = operatingContribution - medianEconomicCosts;
     phases[key] = {
       ...base,
       economicProfit,
-      operatingContribution: percentile(trials.map((trial) => trial.phases[key].operatingContribution), 0.5),
-      revenue: percentile(trials.map((trial) => trial.phases[key].revenue), 0.5),
-      terminalInventoryValue: percentile(trials.map((trial) => trial.phases[key].terminalInventoryValue), 0.5),
-      acquisitionCost: percentile(trials.map((trial) => trial.phases[key].acquisitionCost), 0.5),
-      directCosts: percentile(trials.map((trial) => trial.phases[key].directCosts), 0.5),
-      economicCosts: percentile(trials.map((trial) => trial.phases[key].economicCosts), 0.5),
+      operatingContribution,
+      revenue: medianRevenue,
+      terminalInventoryValue: medianTerminalValue,
+      acquisitionCost: medianAcquisitionCost,
+      directCosts: medianDirectCosts,
+      economicCosts: medianEconomicCosts,
       enteredHead: percentile(trials.map((trial) => trial.phases[key].enteredHead), 0.5),
       exitedHead: percentile(trials.map((trial) => trial.phases[key].exitedHead), 0.5),
       mortalityHead: percentile(trials.map((trial) => trial.phases[key].mortalityHead), 0.5),
@@ -336,7 +345,8 @@ function aggregate(input: ScenarioInput, trials: TrialResult[], runtimeMs: numbe
   });
 
   const chainValues = trials.map((trial) => trial.chainEconomicProfit);
-  const chainEconomicProfit = percentile(chainValues, 0.5);
+  const chainEconomicProfit = PHASES.reduce((sum, key) => sum + phases[key].economicProfit, 0);
+  const chainOperatingContribution = PHASES.reduce((sum, key) => sum + phases[key].operatingContribution, 0);
   const completedHead = percentile(trials.map((trial) => trial.completedHead), 0.5);
   const mortalityHead = percentile(trials.map((trial) => trial.mortalityHead), 0.5);
   const endingInventoryHead = Math.max(0, input.totalHead - completedHead - mortalityHead);
@@ -356,7 +366,7 @@ function aggregate(input: ScenarioInput, trials: TrialResult[], runtimeMs: numbe
     endingInventoryHead,
     retailPounds,
     chainEconomicProfit,
-    chainOperatingContribution: percentile(trials.map((trial) => trial.chainOperatingContribution), 0.5),
+    chainOperatingContribution,
     chainP10: percentile(chainValues, 0.1),
     chainP90: percentile(chainValues, 0.9),
     chainProbabilityOfLoss: chainValues.filter((value) => value < 0).length / chainValues.length,
