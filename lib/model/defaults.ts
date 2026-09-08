@@ -1,6 +1,6 @@
 import type { ScenarioInput } from './types';
 
-export const DATA_VINTAGE = '2025 U.S. reference baseline';
+export const DATA_VINTAGE = 'Based on 2025 U.S. average figures';
 
 export const SOURCE_NOTES = [
   {

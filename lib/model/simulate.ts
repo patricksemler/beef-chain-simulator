@@ -353,6 +353,7 @@ function aggregate(input: ScenarioInput, trials: TrialResult[], runtimeMs: numbe
   const retailPounds = percentile(trials.map((trial) => trial.retailPounds), 0.5);
   const fedCwt = percentile(trials.map((trial) => trial.fedLiveCwtSold), 0.5);
   const sensitivity = buildSensitivity(input);
+  const sensitivityBase = simulateTrial({ ...input, trials: 1 }, 0, true).chainEconomicProfit;
 
   return {
     scenario: input,
@@ -360,6 +361,7 @@ function aggregate(input: ScenarioInput, trials: TrialResult[], runtimeMs: numbe
     phases,
     monthly,
     sensitivity,
+    sensitivityBase,
     totalStartedHead: input.totalHead,
     completedHead,
     mortalityHead,

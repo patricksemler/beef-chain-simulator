@@ -97,6 +97,8 @@ export interface SimulationSummary {
   phases: Record<PhaseKey, PhaseResult>;
   monthly: MonthlyResult[];
   sensitivity: SensitivityResult[];
+  /** Deterministic base-case chain profit the sensitivity swings are measured against. */
+  sensitivityBase: number;
   totalStartedHead: number;
   completedHead: number;
   mortalityHead: number;
