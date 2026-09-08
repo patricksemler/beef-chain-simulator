@@ -520,7 +520,7 @@ export function ScenarioPanel({
             ) : (
               <>
                 <Play className="size-4 fill-current" aria-hidden="true" />
-                {isStale ? 'Update Results' : 'Run Simulation'}
+                Run Simulation
               </>
             )}
           </Button>
