@@ -77,7 +77,7 @@ export function RangeBar({
 
 /**
  * Labels for a RangeBar, anchored at the same positions as the marks they
- * describe. Break-even is dropped when it would collide with a percentile.
+ * describe. The center line is the zero-profit threshold, not a market price.
  */
 export function RangeScale({
   low,
@@ -96,9 +96,9 @@ export function RangeScale({
 
   return (
     <div className="range-scale">
-      <ScaleMark at={lowAt} title="Low end" value={compactCurrency(low)} />
+      <ScaleMark at={lowAt} title="Low outcome" value={compactCurrency(low)} />
       {showZero ? <ScaleMark at={zeroAt} title="Break-even" value="$0" muted /> : null}
-      <ScaleMark at={highAt} title="High end" value={compactCurrency(high)} />
+      <ScaleMark at={highAt} title="High outcome" value={compactCurrency(high)} />
     </div>
   );
 }

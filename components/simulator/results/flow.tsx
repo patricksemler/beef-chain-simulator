@@ -16,6 +16,30 @@ export function Flow({ result }: { result: SimulationSummary }) {
         </span>
       </div>
 
+      <div className="flow-summary">
+        <div className="flow-summary-head">
+          <span className="label">Share of total calves</span>
+          <span className="detail">progress through the chain</span>
+        </div>
+        <div className="flow-summary-bar" aria-label="Cattle flow by stage">
+          {PHASE_ORDER.map((key) => {
+            const phase = result.phases[key];
+            const share = phase.exitedHead / entered;
+            return (
+              <span
+                key={key}
+                className="flow-summary-segment"
+                style={{
+                  width: `${Math.max(share * 100, 6)}%`,
+                  background: PHASE_META[key].color,
+                }}
+                title={`${phase.label}: ${percent(share)} of calves`}
+              />
+            );
+          })}
+        </div>
+      </div>
+
       <ol className="flow-track">
         {PHASE_ORDER.map((key) => {
           const phase = result.phases[key];
