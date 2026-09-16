@@ -96,9 +96,11 @@ export function RangeScale({
 
   return (
     <div className="range-scale">
-      <ScaleMark at={lowAt} title="Low outcome" value={compactCurrency(low)} />
-      {showZero ? <ScaleMark at={zeroAt} title="Break-even" value="$0" muted /> : null}
-      <ScaleMark at={highAt} title="High outcome" value={compactCurrency(high)} />
+      <ScaleMark at={lowAt} title="P10" value={compactCurrency(low)} />
+      {showZero ? (
+        <ScaleMark at={zeroAt} title="Break-even" value="$0" muted />
+      ) : null}
+      <ScaleMark at={highAt} title="P90" value={compactCurrency(high)} />
     </div>
   );
 }

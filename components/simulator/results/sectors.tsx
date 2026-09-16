@@ -8,7 +8,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { PHASE_META, PHASE_ORDER } from '@/components/simulator/results/phases';
-import { RangeBar, domainAcross } from '@/components/simulator/results/range-bar';
+import {
+  RangeBar,
+  domainAcross,
+} from '@/components/simulator/results/range-bar';
 import { compactCurrency, currency, percent } from '@/lib/model/format';
 import type { SimulationSummary } from '@/lib/model/types';
 
@@ -50,12 +53,15 @@ export function Sectors({ result }: { result: SimulationSummary }) {
               />
               <span>{phase.label}</span>
             </div>
-            <div className="sector-summary-bar">
+            <div className="sector-summary-bar" aria-hidden="true">
               <span
                 className="sector-summary-fill"
                 style={{
-                  width: `${Math.max((Math.abs(value) / maxProfit) * 100, 6)}%`,
-                  background: PHASE_META[key].color,
+                  left: value >= 0 ? '50%' : undefined,
+                  right: value < 0 ? '50%' : undefined,
+                  width: `${(Math.abs(value) / maxProfit) * 50}%`,
+                  background:
+                    value < 0 ? 'var(--negative)' : PHASE_META[key].color,
                 }}
               />
             </div>
@@ -124,7 +130,9 @@ export function Sectors({ result }: { result: SimulationSummary }) {
                 </TableCell>
                 <TableCell
                   className={`text-right tabular-nums ${
-                    phase.probabilityOfLoss > 0.5 ? 'text-[var(--negative)]' : ''
+                    phase.probabilityOfLoss > 0.5
+                      ? 'text-[var(--negative)]'
+                      : ''
                   }`}
                 >
                   {percent(phase.probabilityOfLoss)}
@@ -134,7 +142,10 @@ export function Sectors({ result }: { result: SimulationSummary }) {
           </TableBody>
         </Table>
       </div>
-      <p className="panel-note">Higher bars indicate more value created; the vertical line marks break-even.</p>
+      <p className="panel-note">
+        Summary bars extend right for profit and left for loss; outcome ranges
+        mark break-even with a vertical line.
+      </p>
     </section>
   );
 }

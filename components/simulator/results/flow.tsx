@@ -4,6 +4,23 @@ import type { SimulationSummary } from '@/lib/model/types';
 
 export function Flow({ result }: { result: SimulationSummary }) {
   const entered = Math.max(result.totalStartedHead, 1);
+  const chainStatus = [
+    {
+      label: 'Completed',
+      value: result.completedHead,
+      color: PHASE_META.downstream.color,
+    },
+    {
+      label: 'Still in chain',
+      value: result.endingInventoryHead,
+      color: 'var(--muted-foreground)',
+    },
+    {
+      label: 'Mortality',
+      value: result.mortalityHead,
+      color: 'var(--negative)',
+    },
+  ];
 
   return (
     <section className="panel" aria-labelledby="flow-heading">
@@ -18,26 +35,39 @@ export function Flow({ result }: { result: SimulationSummary }) {
 
       <div className="flow-summary">
         <div className="flow-summary-head">
-          <span className="label">Share of total calves</span>
-          <span className="detail">progress through the chain</span>
+          <span className="label">Current chain status</span>
+          <span className="detail">share of calves started</span>
         </div>
-        <div className="flow-summary-bar" aria-label="Cattle flow by stage">
-          {PHASE_ORDER.map((key) => {
-            const phase = result.phases[key];
-            const share = phase.exitedHead / entered;
-            return (
+        <figure
+          className="flow-summary-bar"
+          aria-label={chainStatus
+            .map(({ label, value }) => `${label}: ${percent(value / entered)}`)
+            .join('; ')}
+        >
+          {chainStatus.map(({ label, value, color }) => (
+            <span
+              key={label}
+              className="flow-summary-segment"
+              style={{
+                width: `${(value / entered) * 100}%`,
+                background: color,
+              }}
+              title={`${label}: ${percent(value / entered)}`}
+            />
+          ))}
+        </figure>
+        <ul className="flow-summary-key" aria-hidden="true">
+          {chainStatus.map(({ label, value, color }) => (
+            <li key={label}>
               <span
-                key={key}
-                className="flow-summary-segment"
-                style={{
-                  width: `${Math.max(share * 100, 6)}%`,
-                  background: PHASE_META[key].color,
-                }}
-                title={`${phase.label}: ${percent(share)} of calves`}
+                className="flow-summary-key-dot"
+                style={{ background: color }}
               />
-            );
-          })}
-        </div>
+              <span>{label}</span>
+              <strong>{percent(value / entered)}</strong>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <ol className="flow-track">
@@ -70,7 +100,10 @@ export function Flow({ result }: { result: SimulationSummary }) {
 
       <dl className="stat-strip">
         <StatItem label="Died" value={whole(result.mortalityHead)} />
-        <StatItem label="Still being raised" value={whole(result.endingInventoryHead)} />
+        <StatItem
+          label="Still being raised"
+          value={whole(result.endingInventoryHead)}
+        />
         <StatItem
           label="Break-even cattle price"
           value={`$${result.breakEvenFedPricePerCwt.toFixed(2)}/cwt`}
