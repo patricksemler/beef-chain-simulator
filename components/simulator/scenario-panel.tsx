@@ -15,6 +15,11 @@ import { Slider } from '@/components/ui/slider';
 import { NumberField, PercentField, SelectField } from '@/components/simulator/fields';
 import { SOURCE_NOTES } from '@/lib/model/defaults';
 import { whole } from '@/lib/model/format';
+import {
+  applyHistoricalYear,
+  AVAILABLE_HISTORICAL_YEARS,
+  type HistoricalYear,
+} from '@/lib/model/historical';
 import type { PhaseKey, ScenarioInput } from '@/lib/model/types';
 
 const PHASES: PhaseKey[] = ['cowCalf', 'stocker', 'feedlot', 'downstream'];
@@ -45,10 +50,13 @@ const TRIAL_OPTIONS = [
   { value: '1000', label: '1,000 — most stable' },
 ] as const;
 
+const YEAR_OPTIONS = [...AVAILABLE_HISTORICAL_YEARS]
+  .reverse()
+  .map((year) => ({ value: String(year), label: String(year) }));
+
 function headToSlider(head: number) {
   return (Math.log10(Math.max(1, head)) / LOG_MAX) * 100;
 }
-
 function sliderToHead(position: number) {
   return Math.min(MAX_HEAD, Math.max(1, Math.round(10 ** ((position / 100) * LOG_MAX))));
 }
@@ -117,6 +125,24 @@ export function ScenarioPanel({
 
         <div className="scenario-scroll">
           <div className="space-y-5 px-5 pb-5">
+            <div className="space-y-1.5">
+              <SelectField
+                id="reference-year"
+                label="Reference year"
+                value={String(scenario.referenceYear)}
+                options={YEAR_OPTIONS}
+                onChange={(value) =>
+                  setScenario((current) =>
+                    applyHistoricalYear(current, Number(value) as HistoricalYear),
+                  )
+                }
+              />
+              <p className="detail">
+                Loads that year&apos;s USDA prices and cost indexes. Your herd size,
+                timing, and risk settings stay the same.
+              </p>
+            </div>
+
             <div className="space-y-2.5">
               <div className="flex items-baseline justify-between gap-2">
                 <Label htmlFor={headId} className="field-label">

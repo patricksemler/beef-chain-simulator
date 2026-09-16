@@ -1,0 +1,460 @@
+{
+  "generatedAt": "2026-09-16",
+  "availableYears": [
+    2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025
+  ],
+  "latestYear": 2025,
+  "methodology": {
+    "annualPrices": "Arithmetic mean of USDA ERS monthly observations. Each series has 12 observations except the 2022 fed-steer series, whose January value is reported as unavailable by ERS.",
+    "feedCost": "The app's $230/ton 2025 ration assumption indexed by the USDA ERS annual corn price received by farmers.",
+    "phaseCosts": "The app's 2025 phase costs indexed by USDA ERS U.S. cow-calf operating and allocated-overhead cost series.",
+    "byproductCredit": "The app's $165/head 2025 credit indexed by the USDA ERS Choice beef byproduct value.",
+    "dressingPercentage": "Annual average federally inspected dressed weight divided by annual average federally inspected live weight."
+  },
+  "sources": {
+    "livestock": {
+      "label": "Livestock prices and slaughter weights",
+      "organization": "USDA Economic Research Service",
+      "landingPage": "https://www.ers.usda.gov/data-products/livestock-and-meat-domestic-data",
+      "downloadUrl": "https://www.ers.usda.gov/media/5539/livestock-domestic-data-machine-readable-files.zip?v=50824"
+    },
+    "priceSpreads": {
+      "label": "Retail beef and byproduct values",
+      "organization": "USDA Economic Research Service",
+      "landingPage": "https://www.ers.usda.gov/data-products/meat-price-spreads",
+      "downloadUrl": "https://www.ers.usda.gov/media/5028/historical-monthly-price-spread-data-for-beef-pork-broilers.csv?v=71473"
+    },
+    "cowCalf": {
+      "label": "Cow-calf costs and returns",
+      "organization": "USDA Economic Research Service",
+      "landingPage": "https://www.ers.usda.gov/data-products/commodity-costs-and-returns",
+      "downloadUrl": "https://www.ers.usda.gov/media/4982/cow-calf.csv?v=35803"
+    },
+    "feedGrains": {
+      "label": "Feed-grain prices",
+      "organization": "USDA Economic Research Service",
+      "landingPage": "https://www.ers.usda.gov/data-products/feed-grains-database/feed-grains-yearbook-tables",
+      "downloadUrl": "https://www.ers.usda.gov/media/5766/feed-grains-yearbook-tables-all-years.csv?v=88786"
+    }
+  },
+  "years": {
+    "2015": {
+      "year": 2015,
+      "calfPricePerCwt": 254.54,
+      "feederPricePerCwt": 202.37,
+      "fedPricePerCwt": 148.58,
+      "retailPricePerLb": 6.038,
+      "feedCostPerTon": 200.07,
+      "byproductCreditPerHead": 162.87,
+      "dressingPercentage": 0.6076,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 840.41,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 229.95
+        },
+        "stocker": {
+          "directCostPerHead": 53.08,
+          "dailyCostPerHead": 0.84,
+          "economicCostPerHead": 56.6
+        },
+        "feedlot": {
+          "directCostPerHead": 132.7,
+          "dailyCostPerHead": 0.487,
+          "economicCostPerHead": 49.53
+        },
+        "downstream": {
+          "directCostPerHead": 420.21,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 155.66
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 3.61,
+        "cowCalfOperatingCostPerCow": 606.7,
+        "cowCalfAllocatedOverheadPerCow": 761.74,
+        "choiceBeefByproductCentsPerRetailLb": 32.13
+      }
+    },
+    "2016": {
+      "year": 2016,
+      "calfPricePerCwt": 166.9,
+      "feederPricePerCwt": 142.73,
+      "fedPricePerCwt": 120.89,
+      "retailPricePerLb": 5.741,
+      "feedCostPerTon": 186.22,
+      "byproductCreditPerHead": 135.85,
+      "dressingPercentage": 0.6069,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 772.19,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 234.26
+        },
+        "stocker": {
+          "directCostPerHead": 48.77,
+          "dailyCostPerHead": 0.772,
+          "economicCostPerHead": 57.67
+        },
+        "feedlot": {
+          "directCostPerHead": 121.93,
+          "dailyCostPerHead": 0.447,
+          "economicCostPerHead": 50.46
+        },
+        "downstream": {
+          "directCostPerHead": 386.1,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 158.58
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 3.36,
+        "cowCalfOperatingCostPerCow": 557.45,
+        "cowCalfAllocatedOverheadPerCow": 776.02,
+        "choiceBeefByproductCentsPerRetailLb": 26.8
+      }
+    },
+    "2017": {
+      "year": 2017,
+      "calfPricePerCwt": 168.42,
+      "feederPricePerCwt": 144.99,
+      "fedPricePerCwt": 121.9,
+      "retailPricePerLb": 5.646,
+      "feedCostPerTon": 186.22,
+      "byproductCreditPerHead": 135.84,
+      "dressingPercentage": 0.605,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 773.26,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 239.38
+        },
+        "stocker": {
+          "directCostPerHead": 48.84,
+          "dailyCostPerHead": 0.773,
+          "economicCostPerHead": 58.92
+        },
+        "feedlot": {
+          "directCostPerHead": 122.09,
+          "dailyCostPerHead": 0.448,
+          "economicCostPerHead": 51.56
+        },
+        "downstream": {
+          "directCostPerHead": 386.63,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 162.04
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 3.36,
+        "cowCalfOperatingCostPerCow": 558.22,
+        "cowCalfAllocatedOverheadPerCow": 792.96,
+        "choiceBeefByproductCentsPerRetailLb": 26.79
+      }
+    },
+    "2018": {
+      "year": 2018,
+      "calfPricePerCwt": 172.73,
+      "feederPricePerCwt": 146.93,
+      "fedPricePerCwt": 117.07,
+      "retailPricePerLb": 5.688,
+      "feedCostPerTon": 200.07,
+      "byproductCreditPerHead": 111.91,
+      "dressingPercentage": 0.6047,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 741.59,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 237.95
+        },
+        "stocker": {
+          "directCostPerHead": 46.84,
+          "dailyCostPerHead": 0.742,
+          "economicCostPerHead": 58.57
+        },
+        "feedlot": {
+          "directCostPerHead": 117.09,
+          "dailyCostPerHead": 0.429,
+          "economicCostPerHead": 51.25
+        },
+        "downstream": {
+          "directCostPerHead": 370.8,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 161.07
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 3.61,
+        "cowCalfOperatingCostPerCow": 535.36,
+        "cowCalfAllocatedOverheadPerCow": 788.23,
+        "choiceBeefByproductCentsPerRetailLb": 22.07
+      }
+    },
+    "2019": {
+      "year": 2019,
+      "calfPricePerCwt": 166.27,
+      "feederPricePerCwt": 142.23,
+      "fedPricePerCwt": 117.15,
+      "retailPricePerLb": 5.819,
+      "feedCostPerTon": 197.3,
+      "byproductCreditPerHead": 100.62,
+      "dressingPercentage": 0.6036,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 751.36,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 241.84
+        },
+        "stocker": {
+          "directCostPerHead": 47.45,
+          "dailyCostPerHead": 0.751,
+          "economicCostPerHead": 59.53
+        },
+        "feedlot": {
+          "directCostPerHead": 118.64,
+          "dailyCostPerHead": 0.435,
+          "economicCostPerHead": 52.09
+        },
+        "downstream": {
+          "directCostPerHead": 375.68,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 163.71
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 3.56,
+        "cowCalfOperatingCostPerCow": 542.41,
+        "cowCalfAllocatedOverheadPerCow": 801.11,
+        "choiceBeefByproductCentsPerRetailLb": 19.85
+      }
+    },
+    "2020": {
+      "year": 2020,
+      "calfPricePerCwt": 159.55,
+      "feederPricePerCwt": 135.45,
+      "fedPricePerCwt": 107.73,
+      "retailPricePerLb": 6.385,
+      "feedCostPerTon": 251.06,
+      "byproductCreditPerHead": 87.36,
+      "dressingPercentage": 0.6055,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 740.06,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 248.16
+        },
+        "stocker": {
+          "directCostPerHead": 46.74,
+          "dailyCostPerHead": 0.74,
+          "economicCostPerHead": 61.08
+        },
+        "feedlot": {
+          "directCostPerHead": 116.85,
+          "dailyCostPerHead": 0.428,
+          "economicCostPerHead": 53.45
+        },
+        "downstream": {
+          "directCostPerHead": 370.03,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 167.98
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 4.53,
+        "cowCalfOperatingCostPerCow": 534.25,
+        "cowCalfAllocatedOverheadPerCow": 822.04,
+        "choiceBeefByproductCentsPerRetailLb": 17.23
+      }
+    },
+    "2021": {
+      "year": 2021,
+      "calfPricePerCwt": 172.35,
+      "feederPricePerCwt": 146.96,
+      "fedPricePerCwt": 122.56,
+      "retailPricePerLb": 6.946,
+      "feedCostPerTon": 332.53,
+      "byproductCreditPerHead": 127.49,
+      "dressingPercentage": 0.6042,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 825.33,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 270.22
+        },
+        "stocker": {
+          "directCostPerHead": 52.13,
+          "dailyCostPerHead": 0.825,
+          "economicCostPerHead": 66.52
+        },
+        "feedlot": {
+          "directCostPerHead": 130.32,
+          "dailyCostPerHead": 0.478,
+          "economicCostPerHead": 58.2
+        },
+        "downstream": {
+          "directCostPerHead": 412.66,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 182.92
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 6,
+        "cowCalfOperatingCostPerCow": 595.81,
+        "cowCalfAllocatedOverheadPerCow": 895.14,
+        "choiceBeefByproductCentsPerRetailLb": 25.15
+      }
+    },
+    "2022": {
+      "year": 2022,
+      "calfPricePerCwt": 196.79,
+      "feederPricePerCwt": 165.94,
+      "fedPricePerCwt": 145.11,
+      "retailPricePerLb": 7.297,
+      "feedCostPerTon": 362.46,
+      "byproductCreditPerHead": 177.42,
+      "dressingPercentage": 0.6038,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 955.61,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 291.23
+        },
+        "stocker": {
+          "directCostPerHead": 60.35,
+          "dailyCostPerHead": 0.956,
+          "economicCostPerHead": 71.69
+        },
+        "feedlot": {
+          "directCostPerHead": 150.89,
+          "dailyCostPerHead": 0.553,
+          "economicCostPerHead": 62.73
+        },
+        "downstream": {
+          "directCostPerHead": 477.81,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 197.14
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 6.54,
+        "cowCalfOperatingCostPerCow": 689.86,
+        "cowCalfAllocatedOverheadPerCow": 964.72,
+        "choiceBeefByproductCentsPerRetailLb": 35
+      }
+    },
+    "2023": {
+      "year": 2023,
+      "calfPricePerCwt": 265.65,
+      "feederPricePerCwt": 218.69,
+      "fedPricePerCwt": 176.31,
+      "retailPricePerLb": 7.597,
+      "feedCostPerTon": 252.17,
+      "byproductCreditPerHead": 173.48,
+      "dressingPercentage": 0.6036,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 991.76,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 305.81
+        },
+        "stocker": {
+          "directCostPerHead": 62.64,
+          "dailyCostPerHead": 0.992,
+          "economicCostPerHead": 75.28
+        },
+        "feedlot": {
+          "directCostPerHead": 156.59,
+          "dailyCostPerHead": 0.574,
+          "economicCostPerHead": 65.87
+        },
+        "downstream": {
+          "directCostPerHead": 495.88,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 207.01
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 4.55,
+        "cowCalfOperatingCostPerCow": 715.96,
+        "cowCalfAllocatedOverheadPerCow": 1013.01,
+        "choiceBeefByproductCentsPerRetailLb": 34.22
+      }
+    },
+    "2024": {
+      "year": 2024,
+      "calfPricePerCwt": 315.44,
+      "feederPricePerCwt": 251.96,
+      "fedPricePerCwt": 188.2,
+      "retailPricePerLb": 8.013,
+      "feedCostPerTon": 234.99,
+      "byproductCreditPerHead": 155.68,
+      "dressingPercentage": 0.608,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 955.78,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 318.64
+        },
+        "stocker": {
+          "directCostPerHead": 60.36,
+          "dailyCostPerHead": 0.956,
+          "economicCostPerHead": 78.43
+        },
+        "feedlot": {
+          "directCostPerHead": 150.91,
+          "dailyCostPerHead": 0.553,
+          "economicCostPerHead": 68.63
+        },
+        "downstream": {
+          "directCostPerHead": 477.89,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 215.69
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 4.24,
+        "cowCalfOperatingCostPerCow": 689.98,
+        "cowCalfAllocatedOverheadPerCow": 1055.52,
+        "choiceBeefByproductCentsPerRetailLb": 30.71
+      }
+    },
+    "2025": {
+      "year": 2025,
+      "calfPricePerCwt": 408.4,
+      "feederPricePerCwt": 321.86,
+      "fedPricePerCwt": 224.05,
+      "retailPricePerLb": 8.842,
+      "feedCostPerTon": 230,
+      "byproductCreditPerHead": 165,
+      "dressingPercentage": 0.6114,
+      "phases": {
+        "cowCalf": {
+          "directCostPerHead": 950,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 325
+        },
+        "stocker": {
+          "directCostPerHead": 60,
+          "dailyCostPerHead": 0.95,
+          "economicCostPerHead": 80
+        },
+        "feedlot": {
+          "directCostPerHead": 150,
+          "dailyCostPerHead": 0.55,
+          "economicCostPerHead": 70
+        },
+        "downstream": {
+          "directCostPerHead": 475,
+          "dailyCostPerHead": 0,
+          "economicCostPerHead": 220
+        }
+      },
+      "sourceMetrics": {
+        "cornPricePerBushel": 4.15,
+        "cowCalfOperatingCostPerCow": 685.81,
+        "cowCalfAllocatedOverheadPerCow": 1076.59,
+        "choiceBeefByproductCentsPerRetailLb": 32.55
+      }
+    }
+  }
+}

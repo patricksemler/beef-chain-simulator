@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { cloneDefaultScenario } from '../lib/model/defaults';
+import {
+  applyHistoricalYear,
+  AVAILABLE_HISTORICAL_YEARS,
+  LATEST_HISTORICAL_YEAR,
+} from '../lib/model/historical';
 import { allocateEntryMonths, runSimulation, validateScenario } from '../lib/model/simulate';
 
 function quickScenario() {
@@ -25,7 +30,6 @@ describe('entry allocation', () => {
     expect(allocateEntryMonths(scenario)).toEqual([10_000, ...Array(23).fill(0)]);
   });
 });
-
 describe('scenario validation', () => {
   it('rejects out-of-range head counts, horizons, and custom cadence', () => {
     const scenario = quickScenario();
@@ -34,6 +38,54 @@ describe('scenario validation', () => {
     scenario.cadence = 'custom';
     scenario.customCadence = Array(12).fill(0);
     expect(validateScenario(scenario)).toHaveLength(3);
+  });
+
+  it('rejects a reference year without a complete USDA profile', () => {
+    const scenario = quickScenario();
+    scenario.referenceYear = 2014;
+    expect(validateScenario(scenario)).toContain(
+      'Reference year must be one of the available USDA annual profiles.',
+    );
+  });
+});
+
+describe('historical USDA profiles', () => {
+  it('includes every requested year from 2015 through 2025', () => {
+    expect(AVAILABLE_HISTORICAL_YEARS).toEqual([
+      2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025,
+    ]);
+    expect(LATEST_HISTORICAL_YEAR).toBe(2025);
+  });
+
+  it('loads historical economics while keeping user-owned scenario inputs', () => {
+    const current = quickScenario();
+    current.totalHead = 123_456;
+    current.horizonMonths = 60;
+    current.cadence = 'fall';
+    current.marketRisk.calfVolatility = 0.2;
+    const historical = applyHistoricalYear(current, 2015);
+
+    expect(historical.referenceYear).toBe(2015);
+    expect(historical.totalHead).toBe(123_456);
+    expect(historical.horizonMonths).toBe(60);
+    expect(historical.cadence).toBe('fall');
+    expect(historical.marketRisk.calfVolatility).toBe(0.2);
+    expect(historical.calfPricePerCwt).toBe(254.54);
+    expect(historical.feederPricePerCwt).toBe(202.37);
+    expect(historical.retailPricePerLb).toBe(6.038);
+  });
+
+  it('changes sector economics across historical years', () => {
+    const current = quickScenario();
+    current.cadence = 'upfront';
+    const result2015 = runSimulation(applyHistoricalYear(current, 2015));
+    const result2025 = runSimulation(applyHistoricalYear(current, 2025));
+
+    expect(result2015.dataVintage).toBe('Based on 2015 USDA annual averages');
+    expect(result2025.dataVintage).toBe('Based on 2025 USDA annual averages');
+    expect(result2015.phases.stocker.economicProfit).not.toBe(
+      result2025.phases.stocker.economicProfit,
+    );
   });
 });
 

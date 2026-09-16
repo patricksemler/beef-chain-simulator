@@ -46,6 +46,7 @@ function ResultsPages({ result }: { result: SimulationSummary }) {
             {page.label}
           </button>
         ))}
+        <span className="results-year">{result.scenario.referenceYear} USDA profile</span>
       </div>
       {currentView}
     </div>

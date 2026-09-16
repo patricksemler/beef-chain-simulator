@@ -3,7 +3,7 @@
 import { Database } from 'lucide-react';
 import { ResultsDashboard } from '@/components/simulator/results';
 import { ScenarioPanel } from '@/components/simulator/scenario-panel';
-import { DATA_VINTAGE } from '@/lib/model/defaults';
+import { historicalDataVintage } from '@/lib/model/historical';
 import { useSimulation } from '@/lib/model/use-simulation';
 
 export default function Home() {
@@ -22,7 +22,7 @@ export default function Home() {
           </h1>
           <p className="app-meta">
             <Database className="size-3.5" aria-hidden="true" />
-            {DATA_VINTAGE}
+            {historicalDataVintage(simulation.scenario.referenceYear)}
           </p>
         </div>
       </header>
