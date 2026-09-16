@@ -464,17 +464,19 @@ export function ScenarioPanel({
 
             <Section value="run" title="Simulation settings">
               <div className="field-grid">
-                <SelectField
-                  id="reference-year"
-                  label="Reference year"
-                  value={String(scenario.referenceYear)}
-                  options={YEAR_OPTIONS}
-                  onChange={(value) =>
-                    setScenario((current) =>
-                      applyHistoricalYear(current, Number(value) as HistoricalYear),
-                    )
-                  }
-                />
+                <div className="col-span-2">
+                  <SelectField
+                    id="reference-year"
+                    label="Reference year"
+                    value={String(scenario.referenceYear)}
+                    options={YEAR_OPTIONS}
+                    onChange={(value) =>
+                      setScenario((current) =>
+                        applyHistoricalYear(current, Number(value) as HistoricalYear),
+                      )
+                    }
+                  />
+                </div>
                 <SelectField
                   id="trials"
                   label="Runs"
