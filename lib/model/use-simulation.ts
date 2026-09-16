@@ -4,13 +4,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // oxlint-disable-next-line import/default -- Vite's ?worker loader provides the constructor.
 import SimulationWorker from '../../workers/simulation.worker.ts?worker';
 import { cloneDefaultScenario } from './defaults';
+import {
+  applyHistoricalYear,
+  AVAILABLE_HISTORICAL_YEARS,
+  isHistoricalYear,
+} from './historical';
 import type { EntryCadence, ScenarioInput, SimulationSummary } from './types';
 
 interface PendingRun {
   resolve: (result: SimulationSummary) => void;
   reject: (error: Error) => void;
 }
-
 
 export function useSimulation() {
   const [scenario, setScenario] = useState<ScenarioInput>(() => cloneDefaultScenario());
@@ -94,6 +98,7 @@ export function useSimulation() {
           fedPricePerCwt: { type: 'number', minimum: 0 },
           retailPricePerLb: { type: 'number', minimum: 0 },
           feedCostPerTon: { type: 'number', minimum: 0 },
+          referenceYear: { type: 'integer', enum: AVAILABLE_HISTORICAL_YEARS },
           seed: { type: 'integer' },
         },
         required: ['totalHead', 'horizonYears'],
@@ -102,11 +107,18 @@ export function useSimulation() {
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       async execute(rawInput: unknown) {
         const input = rawInput as Record<string, unknown>;
-        const next = structuredClone(scenarioRef.current);
+        let next = structuredClone(scenarioRef.current);
         if (!Number.isInteger(input.totalHead) || Number(input.totalHead) < 1 || Number(input.totalHead) > 30_000_000) throw new Error('totalHead must be an integer from 1 to 30,000,000.');
         if (!Number.isInteger(input.horizonYears) || Number(input.horizonYears) < 1 || Number(input.horizonYears) > 10) throw new Error('horizonYears must be an integer from 1 to 10.');
         next.totalHead = Number(input.totalHead);
         next.horizonMonths = Number(input.horizonYears) * 12;
+        if (input.referenceYear !== undefined) {
+          const year = Number(input.referenceYear);
+          if (!isHistoricalYear(year)) {
+            throw new Error(`referenceYear must be one of: ${AVAILABLE_HISTORICAL_YEARS.join(', ')}.`);
+          }
+          next = applyHistoricalYear(next, year);
+        }
         if (input.cadence) next.cadence = input.cadence as EntryCadence;
         for (const key of ['calfPricePerCwt', 'feederPricePerCwt', 'fedPricePerCwt', 'retailPricePerLb', 'feedCostPerTon', 'seed'] as const) {
           if (input[key] !== undefined) (next[key] as number) = Number(input[key]);

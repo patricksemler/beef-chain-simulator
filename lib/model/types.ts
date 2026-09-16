@@ -27,6 +27,7 @@ export interface MarketRisk {
 }
 
 export interface ScenarioInput {
+  referenceYear: number;
   totalHead: number;
   horizonMonths: number;
   cadence: EntryCadence;

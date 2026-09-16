@@ -1,6 +1,11 @@
 import type { ScenarioInput } from './types';
+import {
+  applyHistoricalYear,
+  historicalDataVintage,
+  LATEST_HISTORICAL_YEAR,
+} from './historical';
 
-export const DATA_VINTAGE = 'Based on 2025 U.S. average figures';
+export const DATA_VINTAGE = historicalDataVintage(LATEST_HISTORICAL_YEAR);
 
 export const SOURCE_NOTES = [
   {
@@ -14,6 +19,11 @@ export const SOURCE_NOTES = [
     url: 'https://ers.usda.gov/data-products/livestock-and-meat-domestic-data',
   },
   {
+    label: 'Historical feed-grain prices',
+    organization: 'USDA Economic Research Service',
+    url: 'https://www.ers.usda.gov/data-products/feed-grains-database/feed-grains-yearbook-tables',
+  },
+  {
     label: 'Farm-to-retail beef values',
     organization: 'USDA Economic Research Service',
     url: 'https://www.ers.usda.gov/data-products/meat-price-spreads',
@@ -25,7 +35,8 @@ export const SOURCE_NOTES = [
   },
 ] as const;
 
-export const DEFAULT_SCENARIO: ScenarioInput = {
+const BASE_SCENARIO: ScenarioInput = {
+  referenceYear: LATEST_HISTORICAL_YEAR,
   totalHead: 100_000,
   horizonMonths: 24,
   cadence: 'even',
@@ -93,6 +104,11 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
     commonMarketCorrelation: 0.65,
   },
 };
+
+export const DEFAULT_SCENARIO: ScenarioInput = applyHistoricalYear(
+  BASE_SCENARIO,
+  LATEST_HISTORICAL_YEAR,
+);
 
 export function cloneDefaultScenario(): ScenarioInput {
   return structuredClone(DEFAULT_SCENARIO);

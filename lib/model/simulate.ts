@@ -1,4 +1,4 @@
-import { DATA_VINTAGE } from './defaults';
+import { historicalDataVintage, isHistoricalYear } from './historical';
 import type {
   EntryCadence,
   MonthlyResult,
@@ -34,7 +34,6 @@ interface TrialResult {
   chainOperatingContribution: number;
   fedLiveCwtSold: number;
 }
-
 function mulberry32(seed: number) {
   let value = seed >>> 0;
   return () => {
@@ -68,6 +67,9 @@ function clamp(value: number, minimum: number, maximum: number) {
 
 export function validateScenario(input: ScenarioInput) {
   const errors: string[] = [];
+  if (!isHistoricalYear(input.referenceYear)) {
+    errors.push('Reference year must be one of the available USDA annual profiles.');
+  }
   if (!Number.isInteger(input.totalHead) || input.totalHead < 1 || input.totalHead > 30_000_000) {
     errors.push('Head count must be a whole number from 1 to 30,000,000.');
   }
@@ -357,7 +359,7 @@ function aggregate(input: ScenarioInput, trials: TrialResult[], runtimeMs: numbe
 
   return {
     scenario: input,
-    dataVintage: DATA_VINTAGE,
+    dataVintage: historicalDataVintage(input.referenceYear),
     phases,
     monthly,
     sensitivity,
