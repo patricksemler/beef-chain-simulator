@@ -137,10 +137,6 @@ export function ScenarioPanel({
                   )
                 }
               />
-              <p className="detail">
-                Loads that year&apos;s USDA prices and cost indexes. Your herd size,
-                timing, and risk settings stay the same.
-              </p>
             </div>
 
             <div className="space-y-2.5">
