@@ -125,20 +125,6 @@ export function ScenarioPanel({
 
         <div className="scenario-scroll">
           <div className="space-y-5 px-5 pb-5">
-            <div className="space-y-1.5">
-              <SelectField
-                id="reference-year"
-                label="Reference year"
-                value={String(scenario.referenceYear)}
-                options={YEAR_OPTIONS}
-                onChange={(value) =>
-                  setScenario((current) =>
-                    applyHistoricalYear(current, Number(value) as HistoricalYear),
-                  )
-                }
-              />
-            </div>
-
             <div className="space-y-2.5">
               <div className="flex items-baseline justify-between gap-2">
                 <Label htmlFor={headId} className="field-label">
@@ -478,6 +464,17 @@ export function ScenarioPanel({
 
             <Section value="run" title="Simulation settings">
               <div className="field-grid">
+                <SelectField
+                  id="reference-year"
+                  label="Reference year"
+                  value={String(scenario.referenceYear)}
+                  options={YEAR_OPTIONS}
+                  onChange={(value) =>
+                    setScenario((current) =>
+                      applyHistoricalYear(current, Number(value) as HistoricalYear),
+                    )
+                  }
+                />
                 <SelectField
                   id="trials"
                   label="Runs"
