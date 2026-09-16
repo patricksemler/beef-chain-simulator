@@ -6,10 +6,14 @@ const inter = Inter({ variable: '--font-inter', subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Beef Chain Simulator',
-  description: 'Explore U.S. beef supply chain economics from cow-calf through packer and retail.',
+  description:
+    'Explore U.S. beef supply chain economics from cow-calf through packer and retail.',
+  icons: { icon: '/favicon.svg' },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   // The font variable must land on <html>: `--font-sans` is declared at :root,
   // so a variable defined only on <body> resolves as invalid there.
   return (

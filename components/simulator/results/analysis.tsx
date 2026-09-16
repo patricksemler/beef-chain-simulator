@@ -24,9 +24,9 @@ import { compactCurrency, currency } from '@/lib/model/format';
 import type { SimulationSummary } from '@/lib/model/types';
 
 const chartConfig = {
-  revenue: { label: 'Money in', color: '#688a9a' },
-  costs: { label: 'Money out', color: '#b68670' },
-  profit: { label: 'Total profit', color: '#3d6862' },
+  revenue: { label: 'Money in', color: '#6d7a8d' },
+  costs: { label: 'Money out', color: '#c9b59a' },
+  profit: { label: 'Total profit', color: '#500000' },
 } satisfies ChartConfig;
 
 /** Recharts orders its own legend by series internals, so the key is explicit. */
@@ -69,21 +69,39 @@ export function Analysis({ result }: { result: SimulationSummary }) {
       </div>
 
       <div className="px-5 pt-5">
+        <div className="chart-heading">
+          <span className="label">Where value is created</span>
+          <span className="detail">Revenue, costs, and net contribution by sector</span>
+        </div>
         <ChartContainer config={chartConfig} className="aspect-auto h-[320px] w-full">
-          <BarChart data={ledger} margin={{ left: 8, right: 16, top: 28 }}>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis dataKey="name" tickLine={false} axisLine={false} />
+          <BarChart
+            data={ledger}
+            margin={{ left: 8, right: 20, top: 20, bottom: 6 }}
+            barCategoryGap={18}
+          >
+            <CartesianGrid vertical={false} stroke="var(--line)" strokeDasharray="4 4" />
+            <XAxis
+              dataKey="name"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              fontSize={12}
+            />
             <YAxis
               tickLine={false}
               axisLine={false}
               width={64}
               tickFormatter={(value) => compactCurrency(value)}
             />
-            <ReferenceLine y={0} stroke="var(--line)" />
+            <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeOpacity={0.5} strokeDasharray="4 4" />
             <Bar
               dataKey="revenue"
               fill="var(--color-revenue)"
-              radius={[3, 3, 0, 0]}
+              radius={[5, 5, 0, 0]}
+              maxBarSize={26}
+              fillOpacity={0.92}
+              stroke="rgba(255,255,255,0.8)"
+              strokeWidth={1}
               isAnimationActive={false}
             >
               <LabelList
@@ -97,7 +115,11 @@ export function Analysis({ result }: { result: SimulationSummary }) {
             <Bar
               dataKey="costs"
               fill="var(--color-costs)"
-              radius={[3, 3, 0, 0]}
+              radius={[5, 5, 0, 0]}
+              maxBarSize={26}
+              fillOpacity={0.9}
+              stroke="rgba(255,255,255,0.7)"
+              strokeWidth={1}
               isAnimationActive={false}
             >
               <LabelList
@@ -111,7 +133,11 @@ export function Analysis({ result }: { result: SimulationSummary }) {
             <Bar
               dataKey="profit"
               fill="var(--color-profit)"
-              radius={[3, 3, 0, 0]}
+              radius={[5, 5, 0, 0]}
+              maxBarSize={26}
+              fillOpacity={0.94}
+              stroke="rgba(255,255,255,0.75)"
+              strokeWidth={1}
               isAnimationActive={false}
             >
               <LabelList

@@ -4,6 +4,23 @@ import type { SimulationSummary } from '@/lib/model/types';
 
 export function Flow({ result }: { result: SimulationSummary }) {
   const entered = Math.max(result.totalStartedHead, 1);
+  const chainStatus = [
+    {
+      label: 'Completed',
+      value: result.completedHead,
+      color: PHASE_META.downstream.color,
+    },
+    {
+      label: 'Still in chain',
+      value: result.endingInventoryHead,
+      color: 'var(--muted-foreground)',
+    },
+    {
+      label: 'Mortality',
+      value: result.mortalityHead,
+      color: 'var(--negative)',
+    },
+  ];
 
   return (
     <section className="panel" aria-labelledby="flow-heading">
@@ -14,6 +31,43 @@ export function Flow({ result }: { result: SimulationSummary }) {
         <span className="detail tabular-nums">
           {whole(result.totalStartedHead)} calves in
         </span>
+      </div>
+
+      <div className="flow-summary">
+        <div className="flow-summary-head">
+          <span className="label">Current chain status</span>
+          <span className="detail">share of calves started</span>
+        </div>
+        <figure
+          className="flow-summary-bar"
+          aria-label={chainStatus
+            .map(({ label, value }) => `${label}: ${percent(value / entered)}`)
+            .join('; ')}
+        >
+          {chainStatus.map(({ label, value, color }) => (
+            <span
+              key={label}
+              className="flow-summary-segment"
+              style={{
+                width: `${(value / entered) * 100}%`,
+                background: color,
+              }}
+              title={`${label}: ${percent(value / entered)}`}
+            />
+          ))}
+        </figure>
+        <ul className="flow-summary-key" aria-hidden="true">
+          {chainStatus.map(({ label, value, color }) => (
+            <li key={label}>
+              <span
+                className="flow-summary-key-dot"
+                style={{ background: color }}
+              />
+              <span>{label}</span>
+              <strong>{percent(value / entered)}</strong>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <ol className="flow-track">
@@ -46,7 +100,10 @@ export function Flow({ result }: { result: SimulationSummary }) {
 
       <dl className="stat-strip">
         <StatItem label="Died" value={whole(result.mortalityHead)} />
-        <StatItem label="Still being raised" value={whole(result.endingInventoryHead)} />
+        <StatItem
+          label="Still being raised"
+          value={whole(result.endingInventoryHead)}
+        />
         <StatItem
           label="Break-even cattle price"
           value={`$${result.breakEvenFedPricePerCwt.toFixed(2)}/cwt`}
