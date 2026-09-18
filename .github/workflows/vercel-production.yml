@@ -21,5 +21,8 @@ jobs:
 
       - run: npm ci
       - run: npm run build
-      - run: npx vercel@55.0.0 link --cwd dist/client --project beef-chain-simulator --yes --token="${{ secrets.VERCEL_TOKEN }}"
-      - run: npx vercel@55.0.0 deploy dist/client --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
+      - name: Deploy static client to Vercel
+        run: npx vercel@55.0.0 deploy dist/client --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
+        env:
+          VERCEL_ORG_ID: team_ygMo871nidHmzvlGuykMxeAh
+          VERCEL_PROJECT_ID: prj_wjwHY8Y5rqc9uxrHO3fDo6eJF78v
