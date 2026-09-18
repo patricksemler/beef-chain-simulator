@@ -9,6 +9,7 @@ export function SiteFooter() {
         estimates, not USDA forecasts or financial advice.
       </p>
       <ul className="site-footer-sources" aria-label="Data sources">
+        <li className="site-footer-sources-label">Sources</li>
         {DATA_SOURCES.map((source) => (
           <li key={source.landingPage}>
             <a href={source.landingPage} rel="noreferrer">

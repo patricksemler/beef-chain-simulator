@@ -293,6 +293,7 @@ export function AssistantWidget({ getSnapshot, referenceYear }: Props) {
         id="assistant-panel"
         className="assistant-panel"
         aria-label="Beef Dashboard Assistant"
+        data-connected={connected ? '' : undefined}
         open={open}
       >
         <header className="assistant-panel-header">
@@ -336,16 +337,21 @@ export function AssistantWidget({ getSnapshot, referenceYear }: Props) {
         </header>
 
         {!connected ? (
-          <div className="assistant-connect">
-            <div>
-              <h3 className="font-medium">Connect your model provider</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your key stays in this browser tab and is sent only to the
-                assistant API over HTTPS. Questions and the values shown on the
-                dashboard are sent to your selected provider.
+          <form
+            className="assistant-connect"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (apiKey.trim() && !isValidating) void validateConnection();
+            }}
+          >
+            <div className="assistant-connect-intro">
+              <h3>Connect a model</h3>
+              <p>
+                Use your own provider key. It stays in this tab and is sent only
+                to the assistant API over HTTPS.
               </p>
             </div>
-            <div className="space-y-2">
+            <div className="assistant-connect-field">
               <Label htmlFor="assistant-provider">Provider</Label>
               <select
                 id="assistant-provider"
@@ -364,7 +370,7 @@ export function AssistantWidget({ getSnapshot, referenceYear }: Props) {
                 ))}
               </select>
             </div>
-            <div className="space-y-2">
+            <div className="assistant-connect-field">
               <Label htmlFor="assistant-api-key">API key</Label>
               <Input
                 ref={keyInputRef}
@@ -375,23 +381,25 @@ export function AssistantWidget({ getSnapshot, referenceYear }: Props) {
                 placeholder={ASSISTANT_MODELS[provider].keyPlaceholder}
                 value={apiKey}
                 onChange={(event) => setApiKey(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') void validateConnection();
-                }}
               />
             </div>
-            {connectionError ? (
-              <p role="alert" className="text-sm text-[var(--negative)]">
-                {connectionError}
-              </p>
-            ) : null}
+            <div className="assistant-connect-status" aria-live="polite">
+              {connectionError ? (
+                <p role="alert">{connectionError}</p>
+              ) : (
+                <p>
+                  Keys are kept in session storage and cleared with the tab.
+                </p>
+              )}
+            </div>
             <Button
-              onClick={() => void validateConnection()}
+              type="submit"
+              className="assistant-connect-button"
               disabled={!apiKey.trim() || isValidating}
             >
               {isValidating ? 'Checking connection…' : 'Connect'}
             </Button>
-          </div>
+          </form>
         ) : (
           <>
             <div
