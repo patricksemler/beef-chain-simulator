@@ -933,6 +933,12 @@
   color: var(--muted-foreground);
 }
 
+@media (min-width: 721px) {
+  .hero-lede {
+    font-size: clamp(0.9375rem, 1.6vw, 1.125rem);
+  }
+}
+
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
