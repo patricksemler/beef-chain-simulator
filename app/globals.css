@@ -327,7 +327,7 @@
 
 .phase-legend {
   margin-bottom: 0.875rem;
-  font-size: 1.0625rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--ink);
@@ -387,7 +387,7 @@
 
 .phase-legend {
   margin-bottom: 0.875rem;
-  font-size: 1.0625rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--ink);
@@ -890,53 +890,56 @@
 
 /* ---------- Flow ---------- */
 
+/* The five stages read left to right on one line wherever the track is wide
+   enough; below that each stage is a row with its count beside the label, so
+   the numbers keep a readable size instead of sharing a phone width five
+   ways. The query is on the panel rather than the viewport because the
+   results column is narrower beside the rail at 1024px than it is full
+   width just below it. */
+.flow-panel {
+  container-type: inline-size;
+}
+
 .flow-track {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   border-bottom: 1px solid var(--line);
 }
 
 .flow-node {
   display: grid;
-  grid-template-rows: subgrid;
-  grid-row: span 4;
-  gap: 0.5rem;
-  align-content: start;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label value'
+    'bar bar'
+    'detail detail';
+  column-gap: 0.75rem;
+  row-gap: 0.375rem;
+  align-items: baseline;
   background: #fff;
-  padding: 1.25rem 1.5rem;
-  border-left: 1px solid var(--line);
-}
-
-.flow-node:nth-child(odd) {
-  border-left: 0;
-}
-
-.flow-node:nth-child(n + 3) {
+  padding: 0.875rem 1.25rem;
   border-top: 1px solid var(--line);
 }
 
-@media (min-width: 960px) {
-  .flow-track {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .flow-node {
-    border-left: 1px solid var(--line);
-    border-top: 0;
-  }
-  .flow-node:first-child {
-    border-left: 0;
-  }
+.flow-node:first-child {
+  border-top: 0;
+}
+
+.flow-label {
+  grid-area: label;
 }
 
 .flow-value {
-  font-size: 1.625rem;
+  grid-area: value;
+  font-size: 1.375rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
   color: var(--ink);
 }
 
 .flow-bar {
+  grid-area: bar;
   height: 0.375rem;
   width: 100%;
   overflow: hidden;
@@ -948,6 +951,45 @@
   display: block;
   height: 100%;
   border-radius: 999px;
+}
+
+.flow-detail {
+  grid-area: detail;
+}
+
+@container (min-width: 34rem) {
+  .flow-track {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .flow-node {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: none;
+    grid-template-rows: subgrid;
+    grid-row: span 4;
+    gap: 0.5rem;
+    align-content: start;
+    align-items: start;
+    padding: 1.125rem clamp(0.75rem, 2.5cqi, 1.5rem);
+    border-top: 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .flow-node:first-child {
+    border-left: 0;
+  }
+
+  .flow-label,
+  .flow-value,
+  .flow-bar,
+  .flow-detail {
+    grid-area: auto;
+  }
+
+  /* A fifth of the track, less padding, has to hold an eight-digit count. */
+  .flow-value {
+    font-size: clamp(1rem, 2.6cqi, 1.625rem);
+  }
 }
 
 .stat-strip {

@@ -1,7 +1,13 @@
 import historicalData from '@/lib/data/historical-scenarios.json';
 import type { PhaseKey, ScenarioInput } from './types';
 
-const PHASE_KEYS: PhaseKey[] = ['cowCalf', 'stocker', 'feedlot', 'downstream'];
+const PHASE_KEYS: PhaseKey[] = [
+  'cowCalf',
+  'stocker',
+  'feedlot',
+  'packer',
+  'retail',
+];
 
 export type HistoricalYear =
   keyof typeof historicalData.years extends `${infer Year extends number}`
@@ -43,6 +49,7 @@ export function applyHistoricalYear(
   next.calfPricePerCwt = profile.calfPricePerCwt;
   next.feederPricePerCwt = profile.feederPricePerCwt;
   next.fedPricePerCwt = profile.fedPricePerCwt;
+  next.wholesalePricePerLb = profile.wholesalePricePerLb;
   next.retailPricePerLb = profile.retailPricePerLb;
   next.feedCostPerTon = profile.feedCostPerTon;
   next.byproductCreditPerHead = profile.byproductCreditPerHead;

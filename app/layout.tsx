@@ -7,7 +7,7 @@ const inter = Inter({ variable: '--font-inter', subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Beef Chain Simulator',
   description:
-    'Explore U.S. beef supply chain economics from cow-calf through packer and retail.',
+    'Explore U.S. beef supply chain economics from cow-calf through separate packer and retail stages.',
   icons: { icon: '/favicon.svg' },
 };
 

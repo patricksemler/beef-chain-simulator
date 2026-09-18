@@ -60,10 +60,15 @@ const BASE_2025 = {
       dailyCostPerHead: 0.55,
       economicCostPerHead: 70,
     },
-    downstream: {
+    packer: {
       directCostPerHead: 475,
       dailyCostPerHead: 0,
       economicCostPerHead: 220,
+    },
+    retail: {
+      directCostPerHead: 0,
+      dailyCostPerHead: 0,
+      economicCostPerHead: 0,
     },
   },
 };
@@ -290,6 +295,13 @@ async function main() {
       (row) => row.Data_Item === 'All fresh beef retail value',
       'Value',
     );
+    const wholesale = annualMonthlyMean(
+      priceSpreads,
+      'Year',
+      year,
+      (row) => row.Data_Item === 'Choice beef wholesale value',
+      'Value',
+    );
     const byproduct = annualMonthlyMean(
       priceSpreads,
       'Year',
@@ -320,6 +332,7 @@ async function main() {
     const corn = annualCornPrice(feedGrains, year);
     const required = {
       ...prices,
+      wholesale,
       retail,
       byproduct,
       liveWeight,
@@ -345,6 +358,7 @@ async function main() {
       calfPricePerCwt: round(prices.calfPricePerCwt),
       feederPricePerCwt: round(prices.feederPricePerCwt),
       fedPricePerCwt: round(prices.fedPricePerCwt),
+      wholesalePricePerLb: round(wholesale / 100, 3),
       retailPricePerLb: round(retail / 100, 3),
       feedCostPerTon: round(BASE_2025.feedCostPerTon * (corn / referenceCorn)),
       byproductCreditPerHead: round(
@@ -357,6 +371,7 @@ async function main() {
         cowCalfOperatingCostPerCow: round(operating),
         cowCalfAllocatedOverheadPerCow: round(overhead),
         choiceBeefByproductCentsPerRetailLb: round(byproduct),
+        choiceBeefWholesaleCentsPerRetailLb: round(wholesale),
       },
     };
   }
