@@ -1,29 +1,19 @@
 'use client';
 
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-import { Bot } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { lazy, Suspense, useCallback, useState } from 'react';
 import { ResultsDashboard } from '@/components/simulator/results';
 import { ScenarioPanel } from '@/components/simulator/scenario-panel';
+import { hasStaleDisplayedResult } from '@/lib/assistant/context';
 import type {
   DashboardSnapshot,
   ResultsPage,
   ScenarioSection,
-  UiLocation,
 } from '@/lib/assistant/types';
-import { hasStaleDisplayedResult } from '@/lib/assistant/tools';
 import { useSimulation } from '@/lib/model/use-simulation';
 
-const AssistantDrawer = lazy(() =>
-  import('@/components/assistant/assistant-drawer').then((module) => ({
-    default: module.AssistantDrawer,
+const AssistantWidget = lazy(() =>
+  import('@/components/assistant/assistant-widget').then((module) => ({
+    default: module.AssistantWidget,
   })),
 );
 
@@ -34,7 +24,6 @@ export default function Home() {
   const [openScenarioSections, setOpenScenarioSections] = useState<
     ScenarioSection[]
   >(['prices']);
-  const pendingNavigation = useRef<UiLocation | null>(null);
 
   const getSnapshot = useCallback(
     (): DashboardSnapshot => ({
@@ -58,41 +47,6 @@ export default function Home() {
     ],
   );
 
-  const navigate = useCallback((target: UiLocation) => {
-    pendingNavigation.current = target;
-    if (target.resultPage) setActiveResultsPage(target.resultPage);
-    if (target.scenarioSection) {
-      setOpenScenarioSections((current) =>
-        current.includes(target.scenarioSection!)
-          ? current
-          : [...current, target.scenarioSection!],
-      );
-    }
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const pending = pendingNavigation.current;
-        if (!pending) return;
-        const element = document.getElementById(pending.elementId);
-        if (!element) return;
-        if (!element.hasAttribute('tabindex')) element.tabIndex = -1;
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element.focus({ preventScroll: true });
-        pendingNavigation.current = null;
-      });
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!pendingNavigation.current) return;
-    const target = pendingNavigation.current;
-    const element = document.getElementById(target.elementId);
-    if (!element) return;
-    if (!element.hasAttribute('tabindex')) element.tabIndex = -1;
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    element.focus({ preventScroll: true });
-    pendingNavigation.current = null;
-  }, [activeResultsPage, openScenarioSections]);
-
   return (
     <>
       <a href="#results" className="skip-link">
@@ -106,26 +60,6 @@ export default function Home() {
               U.S. supply chain planning model
             </span>
           </h1>
-          <Suspense
-            fallback={
-              <Button
-                variant="outline"
-                className="assistant-header-button"
-                disabled
-              >
-                <Bot className="size-4" aria-hidden="true" />
-                Assistant
-              </Button>
-            }
-          >
-            <AssistantDrawer
-              getSnapshot={getSnapshot}
-              onNavigate={navigate}
-              onApplyAndRun={(scenario) =>
-                void simulation.runScenario(scenario)
-              }
-            />
-          </Suspense>
         </div>
       </header>
 
@@ -149,6 +83,16 @@ export default function Home() {
           />
         </div>
       </main>
+
+      <Suspense fallback={null}>
+        <AssistantWidget
+          getSnapshot={getSnapshot}
+          referenceYear={
+            simulation.result?.scenario.referenceYear ??
+            simulation.scenario.referenceYear
+          }
+        />
+      </Suspense>
     </>
   );
 }

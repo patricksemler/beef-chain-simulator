@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "assistant-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "assistant:dev", "--", "--port", "8788"],
+      "port": 8788
     }
   ]
 }

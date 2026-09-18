@@ -1,12 +1,8 @@
 import type { UIMessage } from 'ai';
 import { isAssistantProvider } from './models';
-import type {
-  AssistantProvider,
-  AssistantSessionState,
-  ConversationSummary,
-} from './types';
+import type { AssistantProvider, AssistantSessionState } from './types';
 
-const STORAGE_KEY = 'beef-dashboard-assistant-v1';
+const STORAGE_KEY = 'beef-dashboard-assistant-v2';
 
 function newSessionId() {
   return crypto.randomUUID();
@@ -36,11 +32,13 @@ export function loadAssistantSession(): AssistantSessionState {
       provider: parsed.provider,
       apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : '',
       sessionId:
-        typeof parsed.sessionId === 'string' ? parsed.sessionId : newSessionId(),
+        typeof parsed.sessionId === 'string'
+          ? parsed.sessionId
+          : newSessionId(),
       messages: Array.isArray(parsed.messages)
         ? (parsed.messages as UIMessage[])
         : [],
-      summary: isSummary(parsed.summary) ? parsed.summary : null,
+      summary: typeof parsed.summary === 'string' ? parsed.summary : null,
       userMessageCount:
         typeof parsed.userMessageCount === 'number'
           ? parsed.userMessageCount
@@ -49,15 +47,6 @@ export function loadAssistantSession(): AssistantSessionState {
   } catch {
     return emptyAssistantSession();
   }
-}
-
-function isSummary(value: unknown): value is ConversationSummary {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof (value as ConversationSummary).text === 'string' &&
-    Array.isArray((value as ConversationSummary).referencedMetricIds)
-  );
 }
 
 export function saveAssistantSession(state: AssistantSessionState) {
