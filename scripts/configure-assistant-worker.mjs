@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 
 const environment = process.argv[2];
 if (environment !== 'preview' && environment !== 'production') {
@@ -38,6 +38,20 @@ if (environment === 'preview') {
   config.d1_databases[0].database_id = databaseId;
 }
 
-await mkdir(dirname(outputPath), { recursive: true });
+// Wrangler resolves paths relative to the config file, which now lives in
+// .wrangler/, so point the entry and migrations back at the repo.
+const outputDir = dirname(outputPath);
+const rebase = (value) =>
+  relative(outputDir, resolve(dirname(sourcePath), value));
+config.main = rebase(config.main);
+for (const database of [
+  ...(config.d1_databases ?? []),
+  ...(config.env?.preview?.d1_databases ?? []),
+]) {
+  if (database.migrations_dir)
+    database.migrations_dir = rebase(database.migrations_dir);
+}
+
+await mkdir(outputDir, { recursive: true });
 await writeFile(outputPath, `${JSON.stringify(config, null, 2)}\n`);
 console.log(outputPath);
