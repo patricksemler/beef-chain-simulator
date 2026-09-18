@@ -189,6 +189,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  white-space: nowrap;
   color: var(--muted-foreground);
   text-decoration: none;
 }
@@ -536,6 +537,26 @@
     position: sticky;
     top: var(--header-h);
     z-index: 10;
+  }
+}
+
+/* Four tabs of very different label lengths don't tile evenly as a wrapped
+   row at phone widths (one column ends up much wider than the other). An
+   even 2-column grid keeps the group looking intentional instead. */
+@media (max-width: 639px) {
+  .results-header {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .results-tab {
+    text-align: center;
+  }
+  .results-year {
+    grid-column: 1 / -1;
+    margin-top: 0.25rem;
+    border-top: 1px solid var(--line);
+    padding-top: 0.625rem;
+    justify-content: flex-end;
   }
 }
 
@@ -949,7 +970,7 @@
 
 .capabilities {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  grid-template-columns: minmax(17rem, 1fr) minmax(0, 2fr);
   gap: 2rem 4rem;
 }
 
@@ -1792,6 +1813,22 @@
   width: 0.625rem;
   height: 0.625rem;
   border-radius: 2px;
+}
+
+/* Below this width the five-sector, three-series bar chart has no room for a
+   value on every bar: the labels overlap each other and the category names.
+   The exact figures are already in the table underneath, so hide them. */
+@media (max-width: 639px) {
+  .bar-label {
+    display: none;
+  }
+
+  /* Recharts sets font-size inline via the axis `fontSize` prop, so the
+     override needs !important. Five categories in that little space need
+     the smaller size to avoid colliding with their neighbors. */
+  .analysis-chart .recharts-cartesian-axis-tick-value {
+    font-size: 10px !important;
+  }
 }
 
 /* ---------- Dashboard assistant ---------- */

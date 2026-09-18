@@ -64,10 +64,14 @@ export default function SimulatorPage() {
           {/* Plain anchors: the static export has no working client router. */}
           <nav className="simulator-nav" aria-label="Site">
             <a href="/">
-              <Home size={15} aria-hidden="true" /> Home
+              <Home size={15} aria-hidden="true" />
+              <span className="sr-only min-[640px]:not-sr-only">Home</span>
             </a>
             <a href="/trends">
-              <LineChart size={15} aria-hidden="true" /> Market trends
+              <LineChart size={15} aria-hidden="true" />
+              <span className="sr-only min-[640px]:not-sr-only">
+                Market trends
+              </span>
             </a>
           </nav>
         </div>
