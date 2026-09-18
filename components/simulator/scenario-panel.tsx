@@ -1,6 +1,5 @@
 'use client';
 
-import { useId } from 'react';
 import { ArrowUpRight, Play, Undo2 } from 'lucide-react';
 import {
   Accordion,
@@ -25,6 +24,7 @@ import {
   type HistoricalYear,
 } from '@/lib/model/historical';
 import type { PhaseKey, ScenarioInput } from '@/lib/model/types';
+import type { ScenarioSection } from '@/lib/assistant/types';
 
 const PHASES: PhaseKey[] = [
   'cowCalf',
@@ -101,6 +101,8 @@ interface Props {
   error: string | null;
   runScenario: (scenario: ScenarioInput) => Promise<unknown>;
   restoreDefaults: () => void;
+  openSections: ScenarioSection[];
+  onOpenSectionsChange: (sections: ScenarioSection[]) => void;
 }
 
 export function ScenarioPanel({
@@ -111,9 +113,9 @@ export function ScenarioPanel({
   error,
   runScenario,
   restoreDefaults,
+  openSections,
+  onOpenSectionsChange,
 }: Props) {
-  const headId = useId();
-
   const updateNumber = (key: keyof ScenarioInput, value: number) =>
     setScenario((current) => ({ ...current, [key]: value }));
 
@@ -156,7 +158,7 @@ export function ScenarioPanel({
           <div className="space-y-5 px-5 pb-5">
             <div className="space-y-2.5">
               <div className="flex items-baseline justify-between gap-2">
-                <Label htmlFor={headId} className="field-label">
+                <Label htmlFor="assistant-total-head" className="field-label">
                   Calves entering
                 </Label>
                 <span className="detail tabular-nums">
@@ -164,7 +166,7 @@ export function ScenarioPanel({
                 </span>
               </div>
               <Input
-                id={headId}
+                id="assistant-total-head"
                 name="totalHead"
                 type="number"
                 inputMode="numeric"
@@ -286,7 +288,10 @@ export function ScenarioPanel({
           </div>
 
           <Accordion
-            defaultValue={['prices']}
+            value={openSections}
+            onValueChange={(value) =>
+              onOpenSectionsChange(value as ScenarioSection[])
+            }
             className="border-t border-[var(--line)]"
           >
             <Section value="prices" title="Prices">
@@ -590,7 +595,7 @@ export function ScenarioPanel({
             </Section>
 
             <Section value="sources" title="Data sources">
-              <ul className="space-y-1">
+              <ul id="data-sources" className="space-y-1" tabIndex={-1}>
                 {SOURCE_NOTES.map((source) => (
                   <li key={source.url}>
                     <a
@@ -659,7 +664,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <AccordionItem value={value} className="border-b border-[var(--line)] px-5">
+    <AccordionItem
+      id={`scenario-section-${value}`}
+      value={value}
+      className="border-b border-[var(--line)] px-5"
+    >
       <AccordionTrigger className="section-trigger">{title}</AccordionTrigger>
       <AccordionContent className="pb-4">{children}</AccordionContent>
     </AccordionItem>

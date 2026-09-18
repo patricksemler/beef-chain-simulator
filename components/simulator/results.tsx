@@ -1,29 +1,48 @@
 'use client';
-
-import { useState } from 'react';
 import { Analysis } from '@/components/simulator/results/analysis';
 import { Flow } from '@/components/simulator/results/flow';
 import { Headline } from '@/components/simulator/results/headline';
 import { Sectors } from '@/components/simulator/results/sectors';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { SimulationSummary } from '@/lib/model/types';
+import type { ResultsPage } from '@/lib/assistant/types';
 
-const RESULT_PAGES = [
+export const RESULT_PAGES = [
   { id: 'profit', label: 'Total profit' },
   { id: 'sectors', label: 'Profit by sector' },
   { id: 'flow', label: 'Cattle flow' },
   { id: 'details', label: 'Details' },
 ] as const;
 
-export function ResultsDashboard({ result }: { result: SimulationSummary | null }) {
+export function ResultsDashboard({
+  result,
+  activePage,
+  onActivePageChange,
+}: {
+  result: SimulationSummary | null;
+  activePage: ResultsPage;
+  onActivePageChange: (page: ResultsPage) => void;
+}) {
   if (result === null) return <ResultsSkeleton />;
 
-  return <ResultsPages result={result} />;
+  return (
+    <ResultsPages
+      result={result}
+      activePage={activePage}
+      onActivePageChange={onActivePageChange}
+    />
+  );
 }
 
-function ResultsPages({ result }: { result: SimulationSummary }) {
-  const [activePage, setActivePage] = useState<(typeof RESULT_PAGES)[number]['id']>('profit');
-
+function ResultsPages({
+  result,
+  activePage,
+  onActivePageChange,
+}: {
+  result: SimulationSummary;
+  activePage: ResultsPage;
+  onActivePageChange: (page: ResultsPage) => void;
+}) {
   const currentView = {
     profit: <Headline result={result} />,
     sectors: <Sectors result={result} />,
@@ -41,12 +60,14 @@ function ResultsPages({ result }: { result: SimulationSummary }) {
             className="results-tab"
             data-active={activePage === page.id}
             aria-pressed={activePage === page.id}
-            onClick={() => setActivePage(page.id)}
+            onClick={() => onActivePageChange(page.id)}
           >
             {page.label}
           </button>
         ))}
-        <span className="results-year">{result.scenario.referenceYear} USDA profile</span>
+        <span className="results-year">
+          {result.scenario.referenceYear} USDA profile
+        </span>
       </div>
       {currentView}
     </div>

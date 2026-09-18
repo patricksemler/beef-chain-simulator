@@ -29,6 +29,10 @@ npm run lint
 npm run build
 ```
 
+The optional BYOK dashboard assistant uses a separate Cloudflare Worker. See
+[`docs/assistant.md`](docs/assistant.md) for local setup, privacy guarantees,
+provider configuration, and the preview/production deployment sequence.
+
 ## Refreshing historical data
 
 Historical ingestion is a standalone build step:

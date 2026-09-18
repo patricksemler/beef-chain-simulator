@@ -1,0 +1,34 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "beef-dashboard-assistant",
+  "main": "workers/assistant-api.ts",
+  "compatibility_date": "2026-05-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ALLOWED_ORIGINS": "https://beef-chain-simulator.vercel.app",
+  },
+  "d1_databases": [
+    {
+      "binding": "ASSISTANT_DB",
+      "database_name": "beef-dashboard-assistant",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "env": {
+    "preview": {
+      "name": "beef-dashboard-assistant-preview",
+      "vars": {
+        "ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:5173",
+      },
+      "d1_databases": [
+        {
+          "binding": "ASSISTANT_DB",
+          "database_name": "beef-dashboard-assistant-preview",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+          "migrations_dir": "migrations",
+        },
+      ],
+    },
+  },
+}
