@@ -5,7 +5,6 @@ export interface AssistantD1 {
       run(): Promise<unknown>;
     };
   };
-  batch(statements: unknown[]): Promise<unknown>;
 }
 
 export async function sha256(value: string) {
@@ -14,65 +13,6 @@ export async function sha256(value: string) {
   return [...new Uint8Array(digest)]
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
-}
-
-export async function claimTurn(
-  db: AssistantD1,
-  sessionHash: string,
-  turnId: string,
-  now = Math.floor(Date.now() / 1000),
-) {
-  const claimed = await db
-    .prepare(
-      `INSERT INTO assistant_turn_locks (session_hash, turn_id, expires_at, steps_used)
-       VALUES (?, ?, ?, 0)
-       ON CONFLICT(session_hash) DO UPDATE SET
-         turn_id = excluded.turn_id,
-         expires_at = excluded.expires_at,
-         steps_used = CASE
-           WHEN assistant_turn_locks.turn_id = excluded.turn_id
-             THEN assistant_turn_locks.steps_used
-           ELSE 0
-         END
-       WHERE assistant_turn_locks.turn_id = excluded.turn_id
-          OR assistant_turn_locks.expires_at <= ?
-       RETURNING turn_id AS turnId, steps_used AS stepsUsed`,
-    )
-    .bind(sessionHash, turnId, now + 120, now)
-    .first<{ turnId: string; stepsUsed: number }>();
-  return {
-    claimed: claimed?.turnId === turnId,
-    stepsUsed: claimed?.stepsUsed ?? 0,
-  };
-}
-
-export async function recordTurnSteps(
-  db: AssistantD1,
-  sessionHash: string,
-  turnId: string,
-  steps: number,
-) {
-  await db
-    .prepare(
-      `UPDATE assistant_turn_locks
-       SET steps_used = steps_used + ?
-       WHERE session_hash = ? AND turn_id = ?`,
-    )
-    .bind(steps, sessionHash, turnId)
-    .run();
-}
-
-export async function releaseTurn(
-  db: AssistantD1,
-  sessionHash: string,
-  turnId: string,
-) {
-  await db
-    .prepare(
-      'DELETE FROM assistant_turn_locks WHERE session_hash = ? AND turn_id = ?',
-    )
-    .bind(sessionHash, turnId)
-    .run();
 }
 
 async function consumeWindow(
@@ -107,6 +47,7 @@ async function consumeWindow(
   };
 }
 
+/** Eight messages per minute and 80 per hour for each salted IP hash. */
 export async function consumeUserMessage(
   db: AssistantD1,
   ipHash: string,

@@ -11,7 +11,7 @@
     {
       "binding": "ASSISTANT_DB",
       "database_name": "beef-dashboard-assistant",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "96abfec4-64c1-4e81-b88f-747ae4ea39e4",
       "migrations_dir": "migrations",
     },
   ],
@@ -19,13 +19,13 @@
     "preview": {
       "name": "beef-dashboard-assistant-preview",
       "vars": {
-        "ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:5173",
+        "ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:5173,https://beef-chain-simulator-l69ogpb1r-patricks-projects-2a5d5caa.vercel.app",
       },
       "d1_databases": [
         {
           "binding": "ASSISTANT_DB",
           "database_name": "beef-dashboard-assistant-preview",
-          "database_id": "00000000-0000-0000-0000-000000000000",
+          "database_id": "b157999c-0de1-4dd9-b76d-1778b077660b",
           "migrations_dir": "migrations",
         },
       ],

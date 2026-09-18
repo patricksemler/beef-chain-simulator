@@ -1,6 +1,7 @@
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
+import type { ProviderOptions } from '@ai-sdk/provider-utils';
 import type { LanguageModel } from 'ai';
 import { ASSISTANT_MODELS } from './models';
 import type { AssistantProvider } from './types';
@@ -22,6 +23,18 @@ export function createAssistantModel(
   return createAnthropic({ apiKey })(model);
 }
 
-export function providerOptions(provider: AssistantProvider) {
-  return provider === 'openai' ? { openai: { store: false } } : undefined;
+/**
+ * Everything the answer needs is already in the prompt, so reasoning budgets
+ * stay small to keep replies quick.
+ */
+export function providerOptions(
+  provider: AssistantProvider,
+): ProviderOptions | undefined {
+  if (provider === 'openai') {
+    return { openai: { store: false, reasoningEffort: 'low' } };
+  }
+  if (provider === 'google') {
+    return { google: { thinkingConfig: { thinkingBudget: 512 } } };
+  }
+  return undefined;
 }

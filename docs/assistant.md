@@ -1,15 +1,26 @@
 # Beef Dashboard Assistant
 
-The dashboard remains a static Vercel deployment. A separate Cloudflare Worker owns provider calls, request locking, rate limits, conversation compaction, and the server-side dashboard tools.
+The dashboard remains a static Vercel deployment. A separate Cloudflare Worker owns provider calls, rate limits, and conversation compaction.
+
+## How it answers
+
+The assistant does not call tools. Every request carries:
+
+- a static system prompt (`lib/assistant/prompt.ts`) describing the dashboard layout, how the model computes each number, a glossary of on-screen metrics with where they appear, the USDA reference profiles for every available year, and the source list; and
+- a text description of everything currently on screen (`lib/assistant/context.ts`): status (open tab, expanded sections, whether results are stale and which inputs changed), every scenario input, and every displayed result across the four results tabs plus the model's sensitivity drivers.
+
+The model is instructed to treat that block as the only source of truth for current numbers, to ask a short clarifying question when a request is ambiguous or refers to something not on screen, and to tell users which control to use rather than claiming to change the dashboard itself.
+
+The widget lives in the bottom-right corner (`components/assistant/assistant-widget.tsx`): a launcher button opens a chat panel, full-screen on phones. Answers render as markdown; `[source:ID]` tokens resolve to verified USDA links.
 
 ## Local setup
 
 1. Copy `.dev.vars.example` to `.dev.vars` and replace the salt.
 2. Create the local D1 tables with `npm run assistant:db:local`.
-3. Start the API with `npm run assistant:dev`.
-4. Start the dashboard with `VITE_ASSISTANT_API_URL=http://localhost:8787 npm run dev`.
+3. Start the API with `npm run assistant:dev` (add `-- --port 8788` if 8787 is taken).
+4. Start the dashboard with `VITE_ASSISTANT_API_URL=http://localhost:8787 npm run dev` (or put that line in `.env.development.local`).
 
-The provider key is entered in the drawer. It is stored only in `sessionStorage`, sent as a Bearer credential to the Worker, and forwarded to the selected provider. It must not be placed in a build variable, Worker secret, log, D1 table, or analytics event.
+The provider key is entered in the widget. It is stored only in `sessionStorage`, sent as a Bearer credential to the Worker, and forwarded to the selected provider. It must not be placed in a build variable, Worker secret, log, D1 table, or analytics event.
 
 ## Cloudflare setup
 
@@ -31,7 +42,7 @@ npm run assistant:db:production
 npm run assistant:deploy
 ```
 
-Set `VITE_ASSISTANT_API_URL` separately in Vercel Preview and Production. Production must point to the production Worker and preserve `https://beef-chain-simulator.vercel.app` as the dashboard URL.
+Build the static client with `VITE_ASSISTANT_API_URL` pointing at the matching Worker, then deploy `dist/client` to Vercel. Production must point to the production Worker and preserve `https://beef-chain-simulator.vercel.app` as the dashboard URL.
 
 ## GitHub secrets
 
@@ -49,8 +60,8 @@ The deployment workflows expect:
 
 ## Privacy and limits
 
-- D1 stores only salted session/IP hashes, active turn IDs, window timestamps, and counts.
-- One turn may be active per session. The same turn may continue after a browser-executed tool; another turn receives `409`.
-- A turn lease expires after two minutes. Stop calls `/v1/turn/cancel` to release it early.
-- New user messages are limited to eight per minute and 80 per hour per salted IP hash. Tool continuations and compaction do not consume another allowance.
-- Chat context compacts after 12 user messages or about 8,000 estimated tokens, retaining a structured summary and the latest six complete turns. A 41st message starts a new local chat while retaining the connected key.
+- D1 stores only salted IP hashes, window timestamps, and request counts.
+- Chat requests are limited to eight per minute and 80 per hour per salted IP hash. Compaction and key validation do not consume the allowance.
+- Reasoning budgets are kept small (`lib/assistant/provider.ts`) because the prompt already contains everything needed to answer; this keeps replies quick.
+- Chat context compacts after 12 user messages or about 8,000 estimated tokens, retaining a plain-text summary and the latest six complete turns. A 41st message starts a new local chat while retaining the connected key.
+- Provider errors are mapped to short messages (bad key, rate limit or quota, high demand) without exposing request details.

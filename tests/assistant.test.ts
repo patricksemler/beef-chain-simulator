@@ -1,29 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import historicalData from '../lib/data/historical-scenarios.json';
-import { ASSISTANT_MODELS } from '../lib/assistant/models';
-import { DOMAIN_REFUSAL } from '../lib/assistant/prompt';
+import {
+  describeDashboard,
+  describeScenarioDifferences,
+  hasStaleDisplayedResult,
+} from '../lib/assistant/context';
 import {
   HISTORICAL_YEARS,
   METRIC_REGISTRY,
   SOURCE_REGISTRY,
-  UI_ITEM_REGISTRY,
 } from '../lib/assistant/metrics';
+import { ASSISTANT_MODELS } from '../lib/assistant/models';
 import {
-  applyScenarioChanges,
-  compareScenarioVariants,
-} from '../lib/assistant/scenarios';
-import { validateRequestSchema } from '../lib/assistant/schemas';
+  ASSISTANT_SYSTEM_PROMPT,
+  buildInstructions,
+  DOMAIN_REFUSAL,
+} from '../lib/assistant/prompt';
 import {
-  getMetricDefinitions,
-  getMetricHistory,
-  getMetricSources,
-  getMetricValues,
-  locateDashboardItems,
-  hasStaleDisplayedResult,
-  selectDashboardSnapshot,
-} from '../lib/assistant/tools';
+  assistantRequestSchema,
+  validateRequestSchema,
+} from '../lib/assistant/schemas';
 import type { DashboardSnapshot } from '../lib/assistant/types';
 import { cloneDefaultScenario } from '../lib/model/defaults';
+import { compactCurrency, currency } from '../lib/model/format';
 import { runSimulation } from '../lib/model/simulate';
 
 function readPath(value: unknown, path: string) {
@@ -59,7 +58,6 @@ describe('assistant metric registry', () => {
     ]);
     for (const metric of METRIC_REGISTRY) {
       if (!metric.historicalPath) continue;
-      expect(metric.supportedYears).toEqual(HISTORICAL_YEARS);
       for (const year of HISTORICAL_YEARS) {
         const profile =
           historicalData.years[
@@ -73,123 +71,118 @@ describe('assistant metric registry', () => {
     }
   });
 
-  it('has definitions, units, verified sources, and UI targets', () => {
+  it('has definitions, units, and verified sources', () => {
     for (const metric of METRIC_REGISTRY) {
       expect(metric.definition.length).toBeGreaterThan(10);
       expect(metric.unit.length).toBeGreaterThan(0);
-      expect(metric.uiLocation.elementId.length).toBeGreaterThan(0);
       for (const sourceId of metric.sourceIds) {
         const source = SOURCE_REGISTRY[sourceId];
         expect(source).toBeDefined();
         if (source.url) expect(source.url.startsWith('https://')).toBe(true);
       }
     }
-    expect(UI_ITEM_REGISTRY.get('stocker_economic_profit')?.resultPage).toBe(
-      'sectors',
-    );
-  });
-
-  it('returns values, history, definitions, sources, and navigation actions', () => {
-    const current = snapshot();
-    const values = getMetricValues(current, ['stocker_economic_profit'], null);
-    expect(values[0]).toMatchObject({
-      metricId: 'stocker_economic_profit',
-      unit: '$',
-      kind: 'simulation_output',
-    });
-    const history = getMetricHistory('calf_price_per_cwt', 2016, 2018);
-    expect('values' in history ? history.values : []).toHaveLength(3);
-    expect(getMetricDefinitions(['saleable_yield'])[0]).toMatchObject({
-      unit: '%',
-      kind: 'scenario_input',
-    });
-    expect(getMetricSources(['retail_price_per_lb'])[0]).toMatchObject({
-      metricId: 'retail_price_per_lb',
-    });
-    expect(locateDashboardItems(['details_page'])[0]).toMatchObject({
-      action: { type: 'navigate', target: { resultPage: 'details' } },
-    });
   });
 });
 
-describe('assistant snapshot and scenarios', () => {
-  it('keeps edited inputs separate from displayed results when stale', () => {
+describe('assistant system prompt', () => {
+  it('includes the glossary, every USDA reference year, and the sources', () => {
+    expect(ASSISTANT_SYSTEM_PROMPT).toContain(DOMAIN_REFUSAL);
+    for (const metric of METRIC_REGISTRY) {
+      expect(ASSISTANT_SYSTEM_PROMPT).toContain(`- ${metric.label} (`);
+    }
+    for (const year of HISTORICAL_YEARS) {
+      const profile =
+        historicalData.years[String(year) as keyof typeof historicalData.years];
+      expect(ASSISTANT_SYSTEM_PROMPT).toContain(
+        `| ${year} | ${profile.calfPricePerCwt.toFixed(2)} |`,
+      );
+    }
+    for (const source of Object.values(SOURCE_REGISTRY)) {
+      expect(ASSISTANT_SYSTEM_PROMPT).toContain(`[source:${source.id}]`);
+    }
+  });
+
+  it('appends the summary and the current dashboard state', () => {
     const current = snapshot();
-    current.draftScenario.retailPricePerLb += 1;
+    const instructions = buildInstructions(
+      current,
+      'Earlier we discussed 2022.',
+    );
+    expect(instructions).toContain('SUMMARY OF EARLIER CONVERSATION');
+    expect(instructions).toContain('Earlier we discussed 2022.');
+    expect(instructions.endsWith(describeDashboard(current))).toBe(true);
+  });
+});
+
+describe('dashboard state description', () => {
+  it('lists every displayed headline, sector, flow, and ledger value', () => {
+    const current = snapshot();
+    const result = current.displayedResult!;
+    const text = describeDashboard(current);
+    expect(text).toContain('Results tab open: "Total profit"');
+    expect(text).toContain('Scenario sections expanded: "Prices"');
+    expect(text).toContain('nothing is stale');
+    expect(text).toContain('Calves entering: 2,000 head');
+    expect(text).toContain(`Reference year ${result.scenario.referenceYear}`);
+    expect(text).toContain(
+      `Total profit (headline, median across runs): ${compactCurrency(result.chainEconomicProfit)} (${currency(result.chainEconomicProfit)})`,
+    );
+    expect(text).toContain(`P10 ${currency(result.chainP10)} to P90`);
+    for (const phase of Object.values(result.phases)) {
+      expect(text).toContain(
+        `- ${phase.label}: Profit ${compactCurrency(phase.economicProfit)}`,
+      );
+      expect(text).toContain(
+        `Cash profit ${currency(phase.operatingContribution)}`,
+      );
+      expect(text).toContain(
+        `${phase.label}: ${Math.round(phase.exitedHead).toLocaleString('en-US')} head exited`,
+      );
+    }
+    expect(text).toContain(
+      `Break-even cattle price: $${result.breakEvenFedPricePerCwt.toFixed(2)}/cwt`,
+    );
+    expect(text).toContain(
+      `Break-even beef price: $${result.breakEvenRetailPricePerLb.toFixed(2)}/lb`,
+    );
+    for (const driver of result.sensitivity) {
+      expect(text).toContain(`- ${driver.label}: -10% →`);
+    }
+  });
+
+  it('flags stale results and names the edited inputs', () => {
+    const current = snapshot();
+    const displayed = current.displayedResult!.scenario;
+    current.draftScenario.retailPricePerLb = displayed.retailPricePerLb + 1;
+    current.draftScenario.phases.stocker.durationDays = 200;
     current.isStale = hasStaleDisplayedResult(
       current.draftScenario,
       current.displayedResult,
     );
-    const selected = selectDashboardSnapshot(current, ['status', 'inputs']);
-    expect(selected.status).toMatchObject({ isStale: true });
-    const inputs = selected as {
-      draftInputs: { prices: { retailPricePerLb: number } };
-      displayedInputs: { prices: { retailPricePerLb: number } };
-    };
-    expect(inputs.draftInputs.prices.retailPricePerLb).not.toBe(
-      inputs.displayedInputs.prices.retailPricePerLb,
+    expect(current.isStale).toBe(true);
+    const differences = describeScenarioDifferences(
+      current.draftScenario,
+      displayed,
     );
+    expect(differences).toHaveLength(2);
+    expect(differences[0]).toContain('Retail beef price');
+    expect(differences[1]).toContain('Stocker days: 150 → 200');
+    const text = describeDashboard(current);
+    expect(text).toContain('STALE');
+    expect(text).toContain('CURRENT SCENARIO INPUTS (as edited; not yet run)');
   });
 
-  it('compares historical years while preserving user-owned settings', () => {
+  it('explains when no results are displayed yet', () => {
     const current = snapshot();
-    current.draftScenario.totalHead = 12_345;
-    current.draftScenario.seed = 99;
-    current.draftScenario.trials = 2;
-    current.draftScenario.marketRisk.calfVolatility = 0.17;
-    const comparison = compareScenarioVariants(
-      current,
-      'draft',
-      [
-        { label: '2016', referenceYear: 2016, changes: [] },
-        { label: '2018', referenceYear: 2018, changes: [] },
-      ],
-      ['chain_economic_profit', 'stocker_economic_profit'],
-    );
-    expect(comparison.variants).toHaveLength(2);
-    expect(comparison.variants[0].referenceYear).toBe(2016);
-    expect(
-      comparison.variants[0].values.chain_economic_profit.absoluteDelta,
-    ).not.toBeNull();
-    expect(current.draftScenario.totalHead).toBe(12_345);
-    expect(current.draftScenario.seed).toBe(99);
-    expect(current.draftScenario.trials).toBe(2);
-    expect(current.draftScenario.marketRisk.calfVolatility).toBe(0.17);
-  });
-
-  it('rejects extra variants, unknown fields, wrong types, and invalid values', () => {
-    const current = snapshot();
-    expect(() =>
-      compareScenarioVariants(
-        current,
-        'draft',
-        Array.from({ length: 4 }, (_, index) => ({
-          label: String(index),
-          referenceYear: null,
-          changes: [],
-        })),
-        ['chain_economic_profit'],
-      ),
-    ).toThrow('At most three variants');
-    expect(() =>
-      applyScenarioChanges(current.draftScenario, [
-        { path: 'notASetting', value: 1 },
-      ]),
-    ).toThrow('cannot be changed');
-    expect(() =>
-      applyScenarioChanges(current.draftScenario, [
-        { path: 'retailPricePerLb', value: 'high' },
-      ]),
-    ).toThrow('finite number');
-    expect(() =>
-      applyScenarioChanges(current.draftScenario, [
-        { path: 'totalHead', value: 0 },
-      ]),
-    ).toThrow('Head count');
+    current.displayedResult = null;
+    current.isRunning = true;
+    const text = describeDashboard(current);
+    expect(text).toContain('A simulation is running right now');
+    expect(text).toContain('No results are displayed yet');
   });
 });
 
-describe('provider allowlist', () => {
+describe('request validation', () => {
   it('accepts only the curated model for each provider', () => {
     for (const [provider, config] of Object.entries(ASSISTANT_MODELS)) {
       expect(
@@ -206,6 +199,24 @@ describe('provider allowlist', () => {
         provider: 'unknown',
         model: 'gpt-5-mini',
       }).success,
+    ).toBe(false);
+  });
+
+  it('accepts a chat request with a snapshot and a plain-text summary', () => {
+    const request = {
+      provider: 'google',
+      model: ASSISTANT_MODELS.google.model,
+      messages: [{ role: 'user', parts: [{ type: 'text', text: 'Why?' }] }],
+      snapshot: snapshot(),
+      summary: null,
+    };
+    expect(assistantRequestSchema.safeParse(request).success).toBe(true);
+    expect(
+      assistantRequestSchema.safeParse({ ...request, tools: [] }).success,
+    ).toBe(false);
+    expect(
+      assistantRequestSchema.safeParse({ ...request, summary: { text: 'x' } })
+        .success,
     ).toBe(false);
   });
 
