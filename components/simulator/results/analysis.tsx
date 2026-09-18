@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { PHASE_ORDER } from '@/components/simulator/results/phases';
+import { StageEconomics } from '@/components/simulator/results/stage-economics';
 import { compactCurrency, currency } from '@/lib/model/format';
 import type { SimulationSummary } from '@/lib/model/types';
 
@@ -52,7 +53,8 @@ export function Analysis({ result }: { result: SimulationSummary }) {
         return {
           name: phase.label,
           revenue: phase.revenue + phase.terminalInventoryValue,
-          costs: phase.acquisitionCost + phase.directCosts + phase.economicCosts,
+          costs:
+            phase.acquisitionCost + phase.directCosts + phase.economicCosts,
           operating: phase.operatingContribution,
           profit: phase.economicProfit,
         };
@@ -71,7 +73,9 @@ export function Analysis({ result }: { result: SimulationSummary }) {
       <div className="px-5 pt-5">
         <div className="chart-heading">
           <span className="label">Where value is created</span>
-          <span className="detail">Revenue, costs, and net contribution by sector</span>
+          <span className="detail">
+            Revenue, costs, and net contribution by sector
+          </span>
         </div>
         <ChartContainer
           config={chartConfig}
@@ -82,7 +86,11 @@ export function Analysis({ result }: { result: SimulationSummary }) {
             margin={{ left: 8, right: 20, top: 20, bottom: 6 }}
             barCategoryGap="20%"
           >
-            <CartesianGrid vertical={false} stroke="var(--line)" strokeDasharray="4 4" />
+            <CartesianGrid
+              vertical={false}
+              stroke="var(--line)"
+              strokeDasharray="4 4"
+            />
             <XAxis
               dataKey="name"
               tickLine={false}
@@ -97,7 +105,12 @@ export function Analysis({ result }: { result: SimulationSummary }) {
               width={64}
               tickFormatter={(value) => compactCurrency(value)}
             />
-            <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeOpacity={0.5} strokeDasharray="4 4" />
+            <ReferenceLine
+              y={0}
+              stroke="var(--muted-foreground)"
+              strokeOpacity={0.5}
+              strokeDasharray="4 4"
+            />
             <Bar
               dataKey="revenue"
               fill="var(--color-revenue)"
@@ -183,7 +196,9 @@ export function Analysis({ result }: { result: SimulationSummary }) {
                 </TableCell>
                 <TableCell
                   className={`text-right font-semibold tabular-nums ${
-                    row.profit >= 0 ? 'text-[var(--positive)]' : 'text-[var(--negative)]'
+                    row.profit >= 0
+                      ? 'text-[var(--positive)]'
+                      : 'text-[var(--negative)]'
                   }`}
                 >
                   {currency(row.profit)}
@@ -193,11 +208,17 @@ export function Analysis({ result }: { result: SimulationSummary }) {
           </TableBody>
         </Table>
       </div>
+
+      <StageEconomics result={result} />
     </section>
   );
 }
 
-function ChartKey({ entries }: { entries: { label: string; color: string }[] }) {
+function ChartKey({
+  entries,
+}: {
+  entries: { label: string; color: string }[];
+}) {
   return (
     <ul className="chart-key">
       {entries.map((entry) => (
@@ -213,4 +234,3 @@ function ChartKey({ entries }: { entries: { label: string; color: string }[] }) 
     </ul>
   );
 }
-

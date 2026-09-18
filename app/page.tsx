@@ -41,7 +41,10 @@ export default function Home() {
                 Open the simulator
               </a>
               <a href="/trends" className="button button-quiet">
-                See market trends
+                <span className="button-quiet-label">See market trends</span>
+                <span className="button-quiet-arrow" aria-hidden="true">
+                  {'\u2192'}
+                </span>
               </a>
             </div>
           </div>
