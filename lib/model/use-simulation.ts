@@ -73,7 +73,7 @@ export function useSimulation() {
         }
       }
     };
-    void runScenario(cloneDefaultScenario());
+    void runScenario(cloneDefaultScenario()).catch(() => undefined);
     return () => {
       worker.terminate();
       for (const pending of pendingRuns.values())
@@ -183,7 +183,7 @@ export function useSimulation() {
   }, [scenario, result, isRunning]);
 
   const restoreDefaults = useCallback(() => {
-    void runScenario(cloneDefaultScenario());
+    void runScenario(cloneDefaultScenario()).catch(() => undefined);
   }, [runScenario]);
 
   return {

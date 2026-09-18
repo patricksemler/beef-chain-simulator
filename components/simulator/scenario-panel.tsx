@@ -635,7 +635,7 @@ export function ScenarioPanel({
 
           <Button
             className="run-button"
-            onClick={() => void runScenario(scenario)}
+            onClick={() => void runScenario(scenario).catch(() => undefined)}
             disabled={isRunning}
             data-stale={isStale ? '' : undefined}
           >
