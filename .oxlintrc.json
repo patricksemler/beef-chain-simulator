@@ -40,6 +40,10 @@
     "prefer-rest-params": "error",
     "prefer-spread": "error",
     "import/no-anonymous-default-export": "warn",
+    // The site is a static export of three separate documents, and vinext's
+    // client router does not survive that build (clicks on `next/link` throw
+    // and go nowhere). Internal navigation uses plain anchors on purpose.
+    "nextjs/no-html-link-for-pages": "off",
     "react/display-name": "error",
     "react/jsx-no-comment-textnodes": "error",
     "react/no-unescaped-entities": "error",

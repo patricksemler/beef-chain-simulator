@@ -2,7 +2,6 @@
 
 import { lazy, Suspense, useCallback, useState } from 'react';
 import { Home, LineChart } from 'lucide-react';
-import Link from 'next/link';
 import { ResultsDashboard } from '@/components/simulator/results';
 import { ScenarioPanel } from '@/components/simulator/scenario-panel';
 import { hasStaleDisplayedResult } from '@/lib/assistant/context';
@@ -62,14 +61,19 @@ export default function SimulatorPage() {
               U.S. supply chain planning model
             </span>
           </h1>
-          <div className="simulator-nav" aria-label="Main navigation">
-            <Link href="/">
-              <Home size={15} aria-hidden="true" /> Home
-            </Link>
-            <Link href="/trends">
-              <LineChart size={15} aria-hidden="true" /> Market trends
-            </Link>
-          </div>
+          {/* Plain anchors: the static export has no working client router. */}
+          <nav className="simulator-nav" aria-label="Site">
+            <a href="/">
+              <Home size={15} aria-hidden="true" />
+              <span className="sr-only min-[640px]:not-sr-only">Home</span>
+            </a>
+            <a href="/trends">
+              <LineChart size={15} aria-hidden="true" />
+              <span className="sr-only min-[640px]:not-sr-only">
+                Market trends
+              </span>
+            </a>
+          </nav>
         </div>
       </header>
       <main className="app-body">

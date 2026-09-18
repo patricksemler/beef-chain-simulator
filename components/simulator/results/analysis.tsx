@@ -73,11 +73,14 @@ export function Analysis({ result }: { result: SimulationSummary }) {
           <span className="label">Where value is created</span>
           <span className="detail">Revenue, costs, and net contribution by sector</span>
         </div>
-        <ChartContainer config={chartConfig} className="aspect-auto h-[320px] w-full">
+        <ChartContainer
+          config={chartConfig}
+          className="analysis-chart aspect-auto h-[320px] w-full"
+        >
           <BarChart
             data={ledger}
             margin={{ left: 8, right: 20, top: 20, bottom: 6 }}
-            barCategoryGap={18}
+            barCategoryGap="20%"
           >
             <CartesianGrid vertical={false} stroke="var(--line)" strokeDasharray="4 4" />
             <XAxis
@@ -86,6 +89,7 @@ export function Analysis({ result }: { result: SimulationSummary }) {
               axisLine={false}
               tickMargin={10}
               fontSize={12}
+              interval={0}
             />
             <YAxis
               tickLine={false}
