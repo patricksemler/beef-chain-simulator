@@ -12,7 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { NumberField, PercentField, SelectField } from '@/components/simulator/fields';
+import {
+  NumberField,
+  PercentField,
+  SelectField,
+} from '@/components/simulator/fields';
 import { SOURCE_NOTES } from '@/lib/model/defaults';
 import { whole } from '@/lib/model/format';
 import {
@@ -22,8 +26,27 @@ import {
 } from '@/lib/model/historical';
 import type { PhaseKey, ScenarioInput } from '@/lib/model/types';
 
-const PHASES: PhaseKey[] = ['cowCalf', 'stocker', 'feedlot', 'downstream'];
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const PHASES: PhaseKey[] = [
+  'cowCalf',
+  'stocker',
+  'feedlot',
+  'packer',
+  'retail',
+];
+const MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 const MAX_HEAD = 30_000_000;
 const LOG_MAX = Math.log10(MAX_HEAD);
 
@@ -58,7 +81,10 @@ function headToSlider(head: number) {
   return (Math.log10(Math.max(1, head)) / LOG_MAX) * 100;
 }
 function sliderToHead(position: number) {
-  return Math.min(MAX_HEAD, Math.max(1, Math.round(10 ** ((position / 100) * LOG_MAX))));
+  return Math.min(
+    MAX_HEAD,
+    Math.max(1, Math.round(10 ** ((position / 100) * LOG_MAX))),
+  );
 }
 
 function tickLabel(value: number) {
@@ -98,7 +124,10 @@ export function ScenarioPanel({
   ) =>
     setScenario((current) => ({
       ...current,
-      phases: { ...current.phases, [phase]: { ...current.phases[phase], [key]: value } },
+      phases: {
+        ...current.phases,
+        [phase]: { ...current.phases[phase], [key]: value },
+      },
     }));
 
   const updateRisk = (key: keyof ScenarioInput['marketRisk'], value: number) =>
@@ -148,7 +177,10 @@ export function ScenarioPanel({
                 onChange={(event) => {
                   const next = Number(event.target.value);
                   if (Number.isNaN(next)) return;
-                  updateNumber('totalHead', Math.min(MAX_HEAD, Math.max(1, Math.round(next))));
+                  updateNumber(
+                    'totalHead',
+                    Math.min(MAX_HEAD, Math.max(1, Math.round(next))),
+                  );
                 }}
                 className="bg-white text-lg font-semibold tabular-nums"
               />
@@ -159,7 +191,9 @@ export function ScenarioPanel({
                   onValueChange={(value) =>
                     updateNumber(
                       'totalHead',
-                      sliderToHead(Array.isArray(value) ? value[0] : Number(value)),
+                      sliderToHead(
+                        Array.isArray(value) ? value[0] : Number(value),
+                      ),
                     )
                   }
                   min={0}
@@ -186,7 +220,9 @@ export function ScenarioPanel({
                 label="Time period"
                 value={String(scenario.horizonMonths)}
                 options={HORIZON_OPTIONS}
-                onChange={(value) => updateNumber('horizonMonths', Number(value))}
+                onChange={(value) =>
+                  updateNumber('horizonMonths', Number(value))
+                }
               />
               <SelectField
                 id="cadence"
@@ -203,7 +239,10 @@ export function ScenarioPanel({
             </div>
 
             {scenario.cadence === 'custom' ? (
-              <fieldset className="phase-group" aria-labelledby="monthly-weights">
+              <fieldset
+                className="phase-group"
+                aria-labelledby="monthly-weights"
+              >
                 <h4 id="monthly-weights" className="phase-legend">
                   Monthly weights
                 </h4>
@@ -229,10 +268,11 @@ export function ScenarioPanel({
                         onChange={(event) =>
                           setScenario((current) => ({
                             ...current,
-                            customCadence: current.customCadence.map((weight, itemIndex) =>
-                              itemIndex === index
-                                ? Math.max(0, Number(event.target.value) || 0)
-                                : weight,
+                            customCadence: current.customCadence.map(
+                              (weight, itemIndex) =>
+                                itemIndex === index
+                                  ? Math.max(0, Number(event.target.value) || 0)
+                                  : weight,
                             ),
                           }))
                         }
@@ -273,6 +313,16 @@ export function ScenarioPanel({
                   onChange={(value) => updateNumber('fedPricePerCwt', value)}
                 />
                 <NumberField
+                  id="wholesale-price"
+                  label="Wholesale beef"
+                  unit="$/lb"
+                  step={0.01}
+                  value={scenario.wholesalePricePerLb}
+                  onChange={(value) =>
+                    updateNumber('wholesalePricePerLb', value)
+                  }
+                />
+                <NumberField
                   id="retail-price"
                   label="Retail beef"
                   unit="$/lb"
@@ -292,7 +342,9 @@ export function ScenarioPanel({
                   label="Byproduct"
                   unit="$/head"
                   value={scenario.byproductCreditPerHead}
-                  onChange={(value) => updateNumber('byproductCreditPerHead', value)}
+                  onChange={(value) =>
+                    updateNumber('byproductCreditPerHead', value)
+                  }
                 />
               </div>
             </Section>
@@ -311,7 +363,9 @@ export function ScenarioPanel({
                     id="biological-variation"
                     label="Animal variation"
                     value={scenario.biologicalVariation}
-                    onChange={(value) => updateNumber('biologicalVariation', value)}
+                    onChange={(value) =>
+                      updateNumber('biologicalVariation', value)
+                    }
                   />
                 </div>
                 {PHASES.map((phase) => (
@@ -328,7 +382,9 @@ export function ScenarioPanel({
                         id={`${phase}-days`}
                         label="Days"
                         value={scenario.phases[phase].durationDays}
-                        onChange={(value) => updatePhase(phase, 'durationDays', value)}
+                        onChange={(value) =>
+                          updatePhase(phase, 'durationDays', value)
+                        }
                       />
                       <NumberField
                         id={`${phase}-gain`}
@@ -336,20 +392,26 @@ export function ScenarioPanel({
                         unit="lb"
                         step={0.01}
                         value={scenario.phases[phase].averageDailyGain}
-                        onChange={(value) => updatePhase(phase, 'averageDailyGain', value)}
+                        onChange={(value) =>
+                          updatePhase(phase, 'averageDailyGain', value)
+                        }
                       />
                       <PercentField
                         id={`${phase}-mortality`}
                         label="Mortality"
                         value={scenario.phases[phase].mortalityRate}
-                        onChange={(value) => updatePhase(phase, 'mortalityRate', value)}
+                        onChange={(value) =>
+                          updatePhase(phase, 'mortalityRate', value)
+                        }
                       />
                       <NumberField
                         id={`${phase}-direct-cost`}
                         label="Direct cost"
                         unit="$/head"
                         value={scenario.phases[phase].directCostPerHead}
-                        onChange={(value) => updatePhase(phase, 'directCostPerHead', value)}
+                        onChange={(value) =>
+                          updatePhase(phase, 'directCostPerHead', value)
+                        }
                       />
                       <NumberField
                         id={`${phase}-daily-cost`}
@@ -357,14 +419,18 @@ export function ScenarioPanel({
                         unit="$/head"
                         step={0.01}
                         value={scenario.phases[phase].dailyCostPerHead}
-                        onChange={(value) => updatePhase(phase, 'dailyCostPerHead', value)}
+                        onChange={(value) =>
+                          updatePhase(phase, 'dailyCostPerHead', value)
+                        }
                       />
                       <NumberField
                         id={`${phase}-economic-cost`}
                         label="Overhead"
                         unit="$/head"
                         value={scenario.phases[phase].economicCostPerHead}
-                        onChange={(value) => updatePhase(phase, 'economicCostPerHead', value)}
+                        onChange={(value) =>
+                          updatePhase(phase, 'economicCostPerHead', value)
+                        }
                       />
                     </div>
                   </fieldset>
@@ -378,7 +444,9 @@ export function ScenarioPanel({
                   id="dressing"
                   label="Dressing yield"
                   value={scenario.dressingPercentage}
-                  onChange={(value) => updateNumber('dressingPercentage', value)}
+                  onChange={(value) =>
+                    updateNumber('dressingPercentage', value)
+                  }
                 />
                 <PercentField
                   id="saleable-yield"
@@ -392,28 +460,45 @@ export function ScenarioPanel({
                   unit="lb/day"
                   step={0.1}
                   value={scenario.feedDryMatterLbPerDay}
-                  onChange={(value) => updateNumber('feedDryMatterLbPerDay', value)}
+                  onChange={(value) =>
+                    updateNumber('feedDryMatterLbPerDay', value)
+                  }
                 />
                 <PercentField
                   id="cattle-trend"
                   label="Cattle price trend"
                   value={scenario.annualCattlePriceTrend}
                   max={50}
-                  onChange={(value) => updateNumber('annualCattlePriceTrend', value)}
+                  onChange={(value) =>
+                    updateNumber('annualCattlePriceTrend', value)
+                  }
+                />
+                <PercentField
+                  id="wholesale-trend"
+                  label="Wholesale price trend"
+                  value={scenario.annualWholesalePriceTrend}
+                  max={50}
+                  onChange={(value) =>
+                    updateNumber('annualWholesalePriceTrend', value)
+                  }
                 />
                 <PercentField
                   id="retail-trend"
                   label="Retail price trend"
                   value={scenario.annualRetailPriceTrend}
                   max={50}
-                  onChange={(value) => updateNumber('annualRetailPriceTrend', value)}
+                  onChange={(value) =>
+                    updateNumber('annualRetailPriceTrend', value)
+                  }
                 />
                 <PercentField
                   id="feed-trend"
                   label="Feed cost trend"
                   value={scenario.annualFeedCostTrend}
                   max={50}
-                  onChange={(value) => updateNumber('annualFeedCostTrend', value)}
+                  onChange={(value) =>
+                    updateNumber('annualFeedCostTrend', value)
+                  }
                 />
               </div>
             </Section>
@@ -439,6 +524,12 @@ export function ScenarioPanel({
                   onChange={(value) => updateRisk('fedVolatility', value)}
                 />
                 <PercentField
+                  id="wholesale-volatility"
+                  label="Wholesale price swing"
+                  value={scenario.marketRisk.wholesaleVolatility}
+                  onChange={(value) => updateRisk('wholesaleVolatility', value)}
+                />
+                <PercentField
                   id="retail-volatility"
                   label="Retail price swing"
                   value={scenario.marketRisk.retailVolatility}
@@ -457,7 +548,9 @@ export function ScenarioPanel({
                   min={0}
                   max={1}
                   step={0.05}
-                  onChange={(value) => updateRisk('commonMarketCorrelation', value)}
+                  onChange={(value) =>
+                    updateRisk('commonMarketCorrelation', value)
+                  }
                 />
               </div>
             </Section>
@@ -472,7 +565,10 @@ export function ScenarioPanel({
                     options={YEAR_OPTIONS}
                     onChange={(value) =>
                       setScenario((current) =>
-                        applyHistoricalYear(current, Number(value) as HistoricalYear),
+                        applyHistoricalYear(
+                          current,
+                          Number(value) as HistoricalYear,
+                        ),
                       )
                     }
                   />
@@ -507,7 +603,9 @@ export function ScenarioPanel({
                         <span className="block font-medium text-[var(--ink)]">
                           {source.label}
                         </span>
-                        <span className="text-muted-foreground">{source.organization}</span>
+                        <span className="text-muted-foreground">
+                          {source.organization}
+                        </span>
                       </span>
                       <ArrowUpRight
                         className="mt-0.5 size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-[var(--accent-strong)]"

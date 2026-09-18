@@ -1,6 +1,6 @@
 # Beef Chain Simulator
 
-A browser-based planning model for exploring the economics of moving cattle through the U.S. beef supply chain: cow-calf, stocker, feedlot, and combined packer/retail.
+A browser-based planning model for exploring the economics of moving cattle through the U.S. beef supply chain: cow-calf, stocker, feedlot, packer, and retail.
 
 ## What it does
 

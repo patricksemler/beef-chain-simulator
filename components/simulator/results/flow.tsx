@@ -8,7 +8,7 @@ export function Flow({ result }: { result: SimulationSummary }) {
     {
       label: 'Completed',
       value: result.completedHead,
-      color: PHASE_META.downstream.color,
+      color: PHASE_META.retail.color,
     },
     {
       label: 'Still in chain',
@@ -23,7 +23,7 @@ export function Flow({ result }: { result: SimulationSummary }) {
   ];
 
   return (
-    <section className="panel" aria-labelledby="flow-heading">
+    <section className="panel flow-panel" aria-labelledby="flow-heading">
       <div className="panel-header flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="flow-heading" className="panel-title">
           Cattle flow
@@ -76,7 +76,7 @@ export function Flow({ result }: { result: SimulationSummary }) {
           const share = phase.exitedHead / entered;
           return (
             <li key={key} className="flow-node">
-              <p className="label">{phase.label}</p>
+              <p className="label flow-label">{phase.label}</p>
               <p className="flow-value">{whole(phase.exitedHead)}</p>
               <div className="flow-bar">
                 <span
@@ -87,7 +87,7 @@ export function Flow({ result }: { result: SimulationSummary }) {
                   }}
                 />
               </div>
-              <p className="detail">
+              <p className="detail flow-detail">
                 {percent(share)}
                 {phase.averageExitWeight > 0
                   ? ` · ${whole(phase.averageExitWeight)} lb`

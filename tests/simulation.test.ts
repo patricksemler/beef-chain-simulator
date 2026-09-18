@@ -5,7 +5,11 @@ import {
   AVAILABLE_HISTORICAL_YEARS,
   LATEST_HISTORICAL_YEAR,
 } from '../lib/model/historical';
-import { allocateEntryMonths, runSimulation, validateScenario } from '../lib/model/simulate';
+import {
+  allocateEntryMonths,
+  runSimulation,
+  validateScenario,
+} from '../lib/model/simulate';
 
 function quickScenario() {
   const scenario = cloneDefaultScenario();
@@ -21,13 +25,18 @@ describe('entry allocation', () => {
     const allocation = allocateEntryMonths(scenario);
     expect(allocation).toHaveLength(24);
     expect(allocation.reduce((sum, value) => sum + value, 0)).toBe(100_003);
-    expect(Math.max(...allocation) - Math.min(...allocation)).toBeLessThanOrEqual(1);
+    expect(
+      Math.max(...allocation) - Math.min(...allocation),
+    ).toBeLessThanOrEqual(1);
   });
 
   it('puts every animal in month one for an upfront cadence', () => {
     const scenario = quickScenario();
     scenario.cadence = 'upfront';
-    expect(allocateEntryMonths(scenario)).toEqual([10_000, ...Array(23).fill(0)]);
+    expect(allocateEntryMonths(scenario)).toEqual([
+      10_000,
+      ...Array(23).fill(0),
+    ]);
   });
 });
 describe('scenario validation', () => {
@@ -72,6 +81,7 @@ describe('historical USDA profiles', () => {
     expect(historical.marketRisk.calfVolatility).toBe(0.2);
     expect(historical.calfPricePerCwt).toBe(254.54);
     expect(historical.feederPricePerCwt).toBe(202.37);
+    expect(historical.wholesalePricePerLb).toBe(3.628);
     expect(historical.retailPricePerLb).toBe(6.038);
   });
 
@@ -96,18 +106,31 @@ describe('simulation accounting', () => {
     const second = runSimulation(scenario);
     expect(second.chainEconomicProfit).toBe(first.chainEconomicProfit);
     expect(second.completedHead).toBe(first.completedHead);
-    expect(second.phases.feedlot.p10EconomicProfit).toBe(first.phases.feedlot.p10EconomicProfit);
+    expect(second.phases.feedlot.p10EconomicProfit).toBe(
+      first.phases.feedlot.p10EconomicProfit,
+    );
   });
 
   it('conserves all cattle and orders uncertainty percentiles', () => {
     const result = runSimulation(quickScenario());
-    expect(result.completedHead + result.mortalityHead + result.endingInventoryHead).toBeCloseTo(result.totalStartedHead, 6);
+    expect(
+      result.completedHead + result.mortalityHead + result.endingInventoryHead,
+    ).toBeCloseTo(result.totalStartedHead, 6);
     expect(result.reconciliationDifference).toBeCloseTo(0, 6);
     expect(result.chainP10).toBeLessThanOrEqual(result.chainEconomicProfit);
     expect(result.chainEconomicProfit).toBeLessThanOrEqual(result.chainP90);
     for (const phase of Object.values(result.phases)) {
-      expect(phase.operatingContribution).toBeCloseTo(phase.revenue + phase.terminalInventoryValue - phase.acquisitionCost - phase.directCosts, 4);
-      expect(phase.economicProfit).toBeCloseTo(phase.operatingContribution - phase.economicCosts, 4);
+      expect(phase.operatingContribution).toBeCloseTo(
+        phase.revenue +
+          phase.terminalInventoryValue -
+          phase.acquisitionCost -
+          phase.directCosts,
+        4,
+      );
+      expect(phase.economicProfit).toBeCloseTo(
+        phase.operatingContribution - phase.economicCosts,
+        4,
+      );
     }
   });
 
@@ -118,8 +141,37 @@ describe('simulation accounting', () => {
     larger.totalHead = 200_000;
     const smallResult = runSimulation(smaller);
     const largeResult = runSimulation(larger);
-    expect(largeResult.chainEconomicProfit / smallResult.chainEconomicProfit).toBeCloseTo(2, 8);
-    expect(largeResult.completedHead / smallResult.completedHead).toBeCloseTo(2, 8);
+    expect(
+      largeResult.chainEconomicProfit / smallResult.chainEconomicProfit,
+    ).toBeCloseTo(2, 8);
+    expect(largeResult.completedHead / smallResult.completedHead).toBeCloseTo(
+      2,
+      8,
+    );
+  });
+
+  it('accounts for packer and retail as separate stages', () => {
+    const scenario = quickScenario();
+    scenario.cadence = 'upfront';
+    scenario.trials = 1;
+    scenario.biologicalVariation = 0;
+    for (const phase of Object.values(scenario.phases)) phase.mortalityRate = 0;
+    for (const key of Object.keys(scenario.marketRisk) as Array<
+      keyof typeof scenario.marketRisk
+    >) {
+      scenario.marketRisk[key] = key === 'commonMarketCorrelation' ? 0.65 : 0;
+    }
+
+    const result = runSimulation(scenario);
+    expect(result.phases.packer.label).toBe('Packer');
+    expect(result.phases.retail.label).toBe('Retail');
+    expect(result.phases.packer.exitedHead).toBeCloseTo(scenario.totalHead, 6);
+    expect(result.phases.retail.exitedHead).toBeCloseTo(scenario.totalHead, 6);
+    expect(result.phases.retail.acquisitionCost).toBeCloseTo(
+      result.phases.packer.revenue -
+        scenario.byproductCreditPerHead * result.phases.packer.exitedHead,
+      4,
+    );
   });
 
   it('handles complete mortality without breaking reconciliation', () => {
@@ -139,7 +191,12 @@ describe('simulation accounting', () => {
     const result = runSimulation(scenario);
     expect(result.endingInventoryHead).toBeGreaterThan(0);
     expect(result.completedHead).toBe(0);
-    expect(Object.values(result.phases).reduce((sum, phase) => sum + phase.endingInventoryHead, 0)).toBeGreaterThan(0);
+    expect(
+      Object.values(result.phases).reduce(
+        (sum, phase) => sum + phase.endingInventoryHead,
+        0,
+      ),
+    ).toBeGreaterThan(0);
   });
 
   it('runs the maximum scale without allocating one object per animal', () => {
@@ -159,7 +216,9 @@ describe('simulation accounting', () => {
     scenario.cadence = 'upfront';
     const result = runSimulation(scenario);
     expect(result.totalStartedHead).toBe(1);
-    expect(result.completedHead + result.mortalityHead + result.endingInventoryHead).toBeCloseTo(1, 8);
+    expect(
+      result.completedHead + result.mortalityHead + result.endingInventoryHead,
+    ).toBeCloseTo(1, 8);
   });
 
   it('returns finite losses with zero output prices and extreme costs', () => {
@@ -168,7 +227,8 @@ describe('simulation accounting', () => {
     scenario.feederPricePerCwt = 0;
     scenario.fedPricePerCwt = 0;
     scenario.retailPricePerLb = 0;
-    for (const phase of Object.values(scenario.phases)) phase.directCostPerHead = 1_000_000;
+    for (const phase of Object.values(scenario.phases))
+      phase.directCostPerHead = 1_000_000;
     const result = runSimulation(scenario);
     expect(result.chainEconomicProfit).toBeLessThan(0);
     expect(Number.isFinite(result.chainEconomicProfit)).toBe(true);
@@ -179,9 +239,15 @@ describe('simulation accounting', () => {
     scenario.cadence = 'upfront';
     scenario.biologicalVariation = 0;
     for (const phase of Object.values(scenario.phases)) phase.mortalityRate = 0;
-    for (const key of Object.keys(scenario.marketRisk) as Array<keyof typeof scenario.marketRisk>) scenario.marketRisk[key] = key === 'commonMarketCorrelation' ? 0.65 : 0;
+    for (const key of Object.keys(scenario.marketRisk) as Array<
+      keyof typeof scenario.marketRisk
+    >)
+      scenario.marketRisk[key] = key === 'commonMarketCorrelation' ? 0.65 : 0;
     const result = runSimulation(scenario);
     expect(result.chainP10).toBeCloseTo(result.chainP90, 8);
-    expect(result.chainProbabilityOfLoss === 0 || result.chainProbabilityOfLoss === 1).toBe(true);
+    expect(
+      result.chainProbabilityOfLoss === 0 ||
+        result.chainProbabilityOfLoss === 1,
+    ).toBe(true);
   });
 });

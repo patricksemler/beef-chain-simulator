@@ -1,11 +1,6 @@
-export type PhaseKey = 'cowCalf' | 'stocker' | 'feedlot' | 'downstream';
+export type PhaseKey = 'cowCalf' | 'stocker' | 'feedlot' | 'packer' | 'retail';
 
-export type EntryCadence =
-  | 'even'
-  | 'upfront'
-  | 'spring'
-  | 'fall'
-  | 'custom';
+export type EntryCadence = 'even' | 'upfront' | 'spring' | 'fall' | 'custom';
 
 export interface PhaseAssumptions {
   label: string;
@@ -21,6 +16,7 @@ export interface MarketRisk {
   calfVolatility: number;
   feederVolatility: number;
   fedVolatility: number;
+  wholesaleVolatility: number;
   retailVolatility: number;
   feedVolatility: number;
   commonMarketCorrelation: number;
@@ -39,6 +35,7 @@ export interface ScenarioInput {
   calfPricePerCwt: number;
   feederPricePerCwt: number;
   fedPricePerCwt: number;
+  wholesalePricePerLb: number;
   retailPricePerLb: number;
   feedCostPerTon: number;
   byproductCreditPerHead: number;
@@ -46,6 +43,7 @@ export interface ScenarioInput {
   saleableYield: number;
   feedDryMatterLbPerDay: number;
   annualCattlePriceTrend: number;
+  annualWholesalePriceTrend: number;
   annualRetailPriceTrend: number;
   annualFeedCostTrend: number;
   phases: Record<PhaseKey, PhaseAssumptions>;
@@ -80,7 +78,8 @@ export interface MonthlyResult {
   cowCalf: number;
   stocker: number;
   feedlot: number;
-  downstream: number;
+  packer: number;
+  retail: number;
   chain: number;
 }
 
