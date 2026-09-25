@@ -7,7 +7,7 @@ The dashboard remains a static Vercel deployment. A separate Cloudflare Worker o
 The assistant does not call tools. Every request carries:
 
 - a static system prompt (`lib/assistant/prompt.ts`) describing the dashboard layout, how the model computes each number, a glossary of on-screen metrics with where they appear, the USDA reference profiles for every available year, and the source list; and
-- a text description of everything currently on screen (`lib/assistant/context.ts`): status (open tab, expanded sections, whether results are stale and which inputs changed), every scenario input, and every displayed result across the four results tabs plus the model's sensitivity drivers.
+- a text description of everything currently on screen (`lib/assistant/context.ts`): status (open tab, expanded sections, whether results are stale and which inputs changed), every scenario input, and every displayed result across the three results tabs plus the break-even prices, which the model computes but the screen doesn't show.
 
 The model is instructed to treat that block as the only source of truth for current numbers, to ask a short clarifying question when a request is ambiguous or refers to something not on screen, and to tell users which control to use rather than claiming to change the dashboard itself.
 

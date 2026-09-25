@@ -389,7 +389,7 @@ These files are used by both the browser widget and the Cloudflare Worker.
 
 This file has type definitions only.
 - **`AssistantProvider`**: `openai`, `google`, or `anthropic`.
-- **`ResultsPage`**: the four results tab IDs, `profit`, `sectors`, `flow`, `details`.
+- **`ResultsPage`**: the three results tab IDs, `profit`, `flow`, `details`.
 - **`ScenarioSection`**: the six input panel sections, `prices`, `biology`, `yield`, `risk`, `run`, `sources`.
 - **`DashboardSnapshot`**: a picture of the dashboard at the moment a question is asked. It holds a unique ID, a timestamp, the draft scenario, the displayed result (if any), whether results are stale, whether a run is in progress, the open results tab, and the expanded input sections.
 - **`MetricKind`**: one of `usda_observation`, `derived_historical_assumption`, `scenario_input`, `simulation_output`.
@@ -489,12 +489,11 @@ This file turns the dashboard into text for the assistant.
   - The simulation settings.
 - **`INPUT_LABELS`** is a list of every labeled input, each paired with a function that reads its value as text.
 - **`describeScenarioDifferences(draft, displayed)`** (line 142) compares every labeled input between the displayed scenario and the draft. It returns lines like "Retail beef price: $8.842/lb → $9.500/lb" for each one that changed.
-- **`describeResults(result)`** (line 154) writes out every number on all four results tabs, tab by tab:
-  - The headline values.
-  - Each stage's profit, per-head profit, margin, range, and chance of loss.
-  - The flow counts and break-evens.
-  - The full money-in/money-out ledger.
-  - The sensitivity table, which isn't on screen.
+- **`describeResults(result)`** (line 154) writes out every number on the three results tabs, tab by tab:
+  - The headline values, each stage's profit, and the "What moves profit most" sensitivity rows.
+  - The break-even prices, marked as not shown on screen.
+  - The flow counts, per-stage outcomes (entered, exited, still there, died), and the calf-to-retail timeline.
+  - The full money-in/money-out ledger with per-animal profit, margin, range, and chance of loss for each stage.
 - **`describeDashboard(snapshot)`** (line 217) assembles the complete "CURRENT DASHBOARD STATE" block, in this order:
   1. A status section: open tab, expanded sections, whether a run is in progress, and whether results are stale. If they're stale, it adds a list of edited inputs.
   2. The scenario inputs, with a heading that says whether they produced the displayed results or are unrun edits.
@@ -506,7 +505,7 @@ This file builds the instructions sent to the language model.
 
 - **`DOMAIN_REFUSAL`** is the exact sentence the assistant must use for off-topic questions.
 - **`profile(year)`** (line 21) returns one year's USDA profile.
-- **`locationText(metric)`** (line 27) describes where a metric appears, for example "Profit by sector" results tab, or Scenario panel › "Prices".
+- **`locationText(metric)`** (line 27) describes where a metric appears, for example "Cattle flow" results tab, or Scenario panel › "Prices".
 - **`glossary()`** (line 37) writes one line per metric in the registry: label, unit, definition, where it appears, and methodology if there is one.
 - **`historicalTable()`** (line 46) writes two markdown tables covering every USDA year:
   - One of prices and yields: the five prices, feed, byproduct, dressing yield, and corn price.
@@ -678,45 +677,47 @@ This is the input panel.
 
 ### `components/simulator/results.tsx`
 
-- **`RESULT_PAGES`** lists the four tabs.
+- **`RESULT_PAGES`** lists the three tabs. The Profit tab stacks `Headline` over a `.results-pair` of `Sectors` and `ProfitDrivers`.
 - **`ResultsDashboard`** (line 17) shows a loading skeleton until the first result arrives, then **`ResultsPages`** (line 37), which shows the tab bar, the reference year, and the active tab's content.
 
 ### `components/simulator/results/headline.tsx` → `Headline`
 
-The "Total profit" tab. It shows:
+The headline card at the top of the "Profit" tab. It shows:
 - Chain profit, in red if negative, with a P10–P90 range bar.
 - Four statistics: cash profit, cattle finished (with its share of calves), beef produced, and chance of a loss. The chance of a loss is shown in red above 25%.
 
 ### `components/simulator/results/sectors.tsx` → `Sectors`
 
-The "Profit by sector" tab.
+The "Profit by stage" card on the Profit tab.
 - It sorts the stages from most to least profitable.
-- It draws a summary bar chart where profit extends right and loss extends left from a center line, scaled to the largest absolute profit.
-- It shows a table of each stage's profit, profit per started head, margin, a P10–P90 range bar on a shared scale, and chance of loss (in red above 50%).
+- It draws a summary bar chart where profit extends right and loss extends left from a center line, scaled to the largest absolute profit, then a whole-chain total row.
+
+### `components/simulator/results/profit-drivers.tsx` → `ProfitDrivers`
+
+The "What moves profit most" card on the Profit tab. A tornado chart of `result.sensitivity`: for each driver, one bar for the input 10% lower and one for 10% higher, each drawn as the change from `sensitivityBase`, scaled to the largest change. The right column shows `±swing`.
 
 ### `components/simulator/results/flow.tsx` → `Flow`
 
 The "Cattle flow" tab.
 - A stacked bar splits all calves into finished, still in the chain, and died, as percentages.
 - A row shows each stage's exited head, its share of all calves, and its average exit weight.
-- A strip shows deaths, animals still being raised, and the two break-even prices.
+- A strip shows calf-to-retail days (summed `durationDays`), feedlot exit weight, retail pounds per finished animal, and deaths.
+- **`StageOutcomes`** ("What happened at each stage") draws one bar per stage, sized by `enteredHead` against all calves, split into exited, ending inventory, and mortality.
+- **`JourneyTimeline`** ("Calf-to-retail timeline") lays one animal's stage durations on a month axis next to the entry months that can still finish (`horizonMonths − journey`), with a line where the period ends. It uses the configured durations, not the randomized ones, so the cutoff is approximate.
 
-### `components/simulator/results/analysis.tsx` → `Analysis`
+### `components/simulator/results/stage-details.tsx` → `StageDetails`
 
-The "Details" tab.
-- It builds a ledger for each stage:
-  - **Money in** = revenue + ending inventory value.
-  - **Money out** = acquisition + direct costs + overhead.
-  - **Cash profit** and **total profit**.
-- It draws the ledger as a grouped bar chart, then shows it as a table.
-- Below the table it renders `StageEconomics`.
-- **`formatBarLabel`** formats chart labels. **`ChartKey`** draws a fixed legend.
+The "Stage details" tab. It owns the selected stage (default cow-calf).
+- A stage picker in the header.
+- A snapshot of the picked stage: total profit, profit per animal **entering that stage**, margin, chance of a loss (red above 50%), and a P10–P90 `RangeBar`.
+- `StageEconomics` for the picked stage.
+- "All stages side by side": a table of money in (revenue + ending inventory), money out (acquisition + direct + overhead), cash profit, total profit, margin, and chance of a loss. Clicking a row selects that stage.
 
 ### `components/simulator/results/stage-economics.tsx` → `StageEconomics`
 
-This is the "Follow the money" section of the Details tab. The user picks a stage (default cow-calf).
+This is the "Follow the money" section of the Stage details tab, for the stage chosen in `StageDetails`.
 - **`STAGE_STORY`** is fixed text describing where each stage's money comes from, what it pays for, and what it passes on.
-- **`perHead(value, phase)`** (line 63) divides by **head entering that stage** (not all calves) and shows values under $0.50 as zero.
+- **`perHead(value, phase)`** divides by **head entering that stage** (not all calves) and shows values under $0.50 as zero.
 - **The profit bridge** shows, per head, money in, then cattle purchased, operating expenses, and overhead, ending with total profit.
 - **The expense mix** shows each cost as a share of total costs.
 - **Cost pressure** shows profit per head if direct and overhead costs all change by −20%, −10%, 0%, +10%, or +20%. It's calculated in the component as `profit − (direct + overhead) × change`, with revenue and purchase price held constant.
@@ -974,7 +975,7 @@ This section lists the five sources in `SOURCE_NOTES` as external links. It has 
 
 - **Run Simulation** runs the draft scenario. It's disabled while running and styled differently when there are unrun edits.
 - **Reset** restores every setting to the default and runs immediately.
-- **Results tabs** switch between Total profit, Profit by sector, Cattle flow, and Details.
+- **Results tabs** switch between Profit, Cattle flow, and Stage details.
 - **Stage picker** (Details tab, "Follow the money") chooses which stage the profit bridge, expense mix, and cost pressure chart describe. The default is cow-calf.
 - **Home** and **Market trends** links navigate away.
 - **Skip to results** is a keyboard shortcut link to the results.
@@ -1102,7 +1103,7 @@ Why the stages come out this way:
 6. **Long chats may fail.** After the first compaction, the chat can grow past the Worker's 30-message limit (around the 22nd user message) unless the size-based compaction triggers first, at which point requests are rejected.
 7. **Unsold animals are valued at untrended prices**, while sales use trended prices.
 8. **The sensitivity base case ignores mortality**, because deterministic runs never kill animals.
-9. **"Per head" means two different things.** The Profit by sector tab divides by all calves started. The "Follow the money" section divides by head entering that stage.
+9. **`economicProfitPerStartedHead` is unused.** Every per-head figure on screen divides by head entering that stage; the per-started-calf value is still computed.
 10. **The retail handling cost is hard-coded** at $1.55 per retail pound, and isn't a setting or USDA value.
 11. **Worker progress messages are ignored**, because there's no progress indicator.
 12. **The break-even beef price is misleading for short time periods**, as explained in Part 6.

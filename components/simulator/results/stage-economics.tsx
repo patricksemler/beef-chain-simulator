@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -11,7 +11,7 @@ import {
   YAxis,
 } from 'recharts';
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
-import { PHASE_META, PHASE_ORDER } from '@/components/simulator/results/phases';
+import { PHASE_META } from '@/components/simulator/results/phases';
 import { compactCurrency, currency } from '@/lib/model/format';
 import type {
   PhaseKey,
@@ -24,28 +24,28 @@ const STAGE_STORY: Record<
   { source: string; work: string; output: string }
 > = {
   cowCalf: {
-    source: 'Calf sales and the value of cattle still being raised',
-    work: 'Breeding herd, grazing, health, and calf care',
+    source: 'Calf sales + inventory',
+    work: 'Breeding herd, grazing, care',
     output: 'Weaned calves',
   },
   stocker: {
-    source: 'Feeder cattle sales and remaining inventory value',
-    work: 'Purchased calves, forage, health, and weight gain',
+    source: 'Feeder sales + inventory',
+    work: 'Calves, forage, and health',
     output: 'Feeder cattle',
   },
   feedlot: {
-    source: 'Fed cattle sales and remaining inventory value',
-    work: 'Purchased feeders, feed ration, yardage, and health',
+    source: 'Fed cattle sales + inventory',
+    work: 'Feeders, feed, and yardage',
     output: 'Finished cattle',
   },
   packer: {
-    source: 'Wholesale beef sales plus byproduct credits',
-    work: 'Purchased fed cattle, processing, and plant overhead',
+    source: 'Wholesale beef + byproducts',
+    work: 'Fed cattle and processing',
     output: 'Wholesale beef',
   },
   retail: {
-    source: 'Beef sold at retail',
-    work: 'Purchased wholesale beef, merchandising, and store overhead',
+    source: 'Retail beef sales',
+    work: 'Wholesale beef and store costs',
     output: 'Retail beef',
   },
 };
@@ -65,8 +65,13 @@ function perHead(value: number, phase: PhaseResult) {
   return Math.abs(result) < 0.5 ? 0 : result;
 }
 
-export function StageEconomics({ result }: { result: SimulationSummary }) {
-  const [selectedKey, setSelectedKey] = useState<PhaseKey>('cowCalf');
+export function StageEconomics({
+  result,
+  selectedKey,
+}: {
+  result: SimulationSummary;
+  selectedKey: PhaseKey;
+}) {
   const phase = result.phases[selectedKey];
   const story = STAGE_STORY[selectedKey];
 
@@ -136,37 +141,14 @@ export function StageEconomics({ result }: { result: SimulationSummary }) {
   ];
 
   return (
-    <section
-      className="stage-economics"
-      aria-labelledby="stage-economics-heading"
-    >
-      <div className="stage-economics-head">
-        <div>
-          <h3 id="stage-economics-heading">Follow the money</h3>
-          <p>Choose a stage to see what creates revenue and what absorbs it.</p>
-        </div>
-        <div className="stage-picker" aria-label="Beef chain stage">
-          {PHASE_ORDER.map((key) => (
-            <button
-              key={key}
-              type="button"
-              data-active={selectedKey === key}
-              aria-pressed={selectedKey === key}
-              onClick={() => setSelectedKey(key)}
-            >
-              {PHASE_META[key].label}
-            </button>
-          ))}
-        </div>
-      </div>
-
+    <div className="stage-economics">
       <div className="stage-story" aria-live="polite">
         <div>
           <span className="label">Money comes from</span>
           <strong>{story.source}</strong>
         </div>
         <div>
-          <span className="label">What this stage pays for</span>
+          <span className="label">This stage pays for</span>
           <strong>{story.work}</strong>
         </div>
         <div>
@@ -336,6 +318,6 @@ export function StageEconomics({ result }: { result: SimulationSummary }) {
           </p>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

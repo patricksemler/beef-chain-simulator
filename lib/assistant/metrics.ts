@@ -205,7 +205,7 @@ const baseMetrics: MetricDescriptor[] = [
       'Retail price that would bring total (chain) profit to zero, holding everything else constant.',
     kind: 'simulation_output',
     sourceIds: ['model'],
-    uiLocation: onPage('flow'),
+    uiLocation: {},
   },
   {
     id: 'break_even_fed_price_per_cwt',
@@ -215,7 +215,7 @@ const baseMetrics: MetricDescriptor[] = [
       'Fed-cattle price that would bring feedlot economic profit to zero, holding everything else constant.',
     kind: 'simulation_output',
     sourceIds: ['model'],
-    uiLocation: onPage('flow'),
+    uiLocation: {},
   },
 ];
 
@@ -235,7 +235,7 @@ const phaseMetrics = PHASES.flatMap<MetricDescriptor>(({ key, id, label }) => [
     definition: `${label} revenue plus ending inventory value, minus acquisition, direct, and overhead costs.`,
     kind: 'simulation_output',
     sourceIds: ['model'],
-    uiLocation: onPage('sectors'),
+    uiLocation: onPage('profit'),
   },
   {
     id: `${id}_margin`,
@@ -244,7 +244,7 @@ const phaseMetrics = PHASES.flatMap<MetricDescriptor>(({ key, id, label }) => [
     definition: `${label} profit divided by ${label.toLowerCase()} revenue plus ending inventory value.`,
     kind: 'simulation_output',
     sourceIds: ['model'],
-    uiLocation: onPage('sectors'),
+    uiLocation: onPage('details'),
   },
   {
     id: `${id}_direct_cost_per_head`,

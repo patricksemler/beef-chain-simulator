@@ -1,32 +1,8 @@
-import { useMemo } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { PHASE_META, PHASE_ORDER } from '@/components/simulator/results/phases';
-import {
-  RangeBar,
-  domainAcross,
-} from '@/components/simulator/results/range-bar';
-import { compactCurrency, currency, percent } from '@/lib/model/format';
+import { compactCurrency, percent } from '@/lib/model/format';
 import type { SimulationSummary } from '@/lib/model/types';
 
 export function Sectors({ result }: { result: SimulationSummary }) {
-  const domain = useMemo(
-    () =>
-      domainAcross(
-        PHASE_ORDER.flatMap((key) => [
-          result.phases[key].p10EconomicProfit,
-          result.phases[key].p90EconomicProfit,
-        ]),
-      ),
-    [result],
-  );
-
   const rows = PHASE_ORDER.map((key) => {
     const phase = result.phases[key];
     return { key, phase, value: phase.economicProfit };
@@ -35,16 +11,21 @@ export function Sectors({ result }: { result: SimulationSummary }) {
   const maxProfit = Math.max(...rows.map((row) => Math.abs(row.value)), 1);
 
   return (
-    <section className="panel" aria-labelledby="sectors-heading">
+    <section className="panel card-panel" aria-labelledby="sectors-heading">
       <div className="panel-header">
         <h2 id="sectors-heading" className="panel-title">
-          Profit by sector
+          Profit by stage
         </h2>
+        <p className="panel-subtitle">Who in the chain makes or loses money</p>
       </div>
 
       <div className="sector-summary">
         {rows.map(({ key, phase, value }) => (
-          <div key={key} className="sector-summary-row">
+          <div
+            key={key}
+            className="sector-summary-row"
+            title={`${phase.label}: ${compactCurrency(value)} · ${percent(phase.probabilityOfLoss)} chance of a loss`}
+          >
             <div className="sector-summary-label">
               <span
                 className="sector-summary-dot"
@@ -74,78 +55,20 @@ export function Sectors({ result }: { result: SimulationSummary }) {
             </span>
           </div>
         ))}
+        <div className="sector-summary-row sector-summary-total">
+          <span className="sector-summary-label">Whole chain</span>
+          <span className="detail">Sum of the five stages</span>
+          <span
+            className={`sector-summary-value ${
+              result.chainEconomicProfit < 0
+                ? 'text-[var(--negative)]'
+                : 'text-[var(--ink)]'
+            }`}
+          >
+            {compactCurrency(result.chainEconomicProfit)}
+          </span>
+        </div>
       </div>
-
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="min-w-36">Sector</TableHead>
-              <TableHead className="text-right">Profit</TableHead>
-              <TableHead className="text-right">Per head</TableHead>
-              <TableHead className="text-right">Margin</TableHead>
-              <TableHead className="min-w-48">Range of outcomes</TableHead>
-              <TableHead className="text-right">Chance of a loss</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map(({ key, phase }) => (
-              <TableRow key={key}>
-                <TableCell>
-                  <span className="flex items-center gap-2.5 font-medium text-[var(--ink)]">
-                    <span
-                      className="size-2 shrink-0 rounded-full"
-                      style={{ background: PHASE_META[key].color }}
-                      aria-hidden="true"
-                    />
-                    {phase.label}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <span
-                    className={`font-semibold tabular-nums ${
-                      phase.economicProfit < 0
-                        ? 'text-[var(--negative)]'
-                        : 'text-[var(--ink)]'
-                    }`}
-                  >
-                    {compactCurrency(phase.economicProfit)}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {currency(phase.economicProfitPerStartedHead)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {percent(phase.margin)}
-                </TableCell>
-                <TableCell>
-                  <RangeBar
-                    low={phase.p10EconomicProfit}
-                    high={phase.p90EconomicProfit}
-                    median={phase.economicProfit}
-                    domain={domain}
-                    color={PHASE_META[key].color}
-                    label={phase.label}
-                  />
-                </TableCell>
-                <TableCell
-                  className={`text-right tabular-nums ${
-                    phase.probabilityOfLoss > 0.5
-                      ? 'text-[var(--negative)]'
-                      : ''
-                  }`}
-                >
-                  {percent(phase.probabilityOfLoss)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      <p className="panel-note">
-        Summary bars extend right for profit and left for loss; outcome ranges
-        mark break-even with a vertical line.
-      </p>
     </section>
   );
 }

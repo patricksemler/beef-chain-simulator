@@ -278,21 +278,20 @@ State: `scenario` (the draft the user is editing), `result` (the last *completed
 - `PercentField` stores a 0–1 fraction but edits whole percents.
 - `SelectField` wraps Base UI Select, which needs `items` to render labels.
 
-### 6.2 `results.tsx` and `results/*`: four tabs
+### 6.2 `results.tsx` and `results/*`: three tabs
 
 | Tab (`ResultsPage` id) | Component | Shows |
 |---|---|---|
-| Total profit (`profit`) | `headline.tsx` | `chainEconomicProfit` (big number), P10–P90 `RangeBar`, cash profit, cattle finished (and % of calves), retail lbs, chance of loss |
-| Profit by sector (`sectors`) | `sectors.tsx` | Diverging bar summary sorted by profit, plus a table: profit, per head (per *started* calf), margin, P10–P90 range bar on a shared domain, chance of loss |
-| Cattle flow (`flow`) | `flow.tsx` | Stacked bar of completed / still in chain / mortality, then per-stage `exitedHead`, share, and avg exit weight, then died, still raised, and both break-even prices |
-| Details (`details`) | `analysis.tsx` + `stage-economics.tsx` | Grouped bar chart (Recharts) and ledger table: money in (revenue + ending inventory), money out (acquisition + direct + overhead), cash profit, total profit. Then "Follow the money". |
+| Profit (`profit`) | `headline.tsx`, `sectors.tsx`, `profit-drivers.tsx` | `chainEconomicProfit` (big number), P10–P90 `RangeBar`, cash profit, cattle finished (and % of calves), retail lbs, chance of loss. Below it, side by side: "Profit by stage" (diverging bars sorted by profit, plus a whole-chain total) and "What moves profit most" (a tornado chart of `sensitivity`, each bar measured from `sensitivityBase`) |
+| Cattle flow (`flow`) | `flow.tsx` | Stacked bar of completed / still in chain / mortality, per-stage `exitedHead`, share, and avg exit weight, then calf-to-retail days, finished weight, beef per animal sold, and deaths. Then "What happened at each stage" (per-stage bars sized by `enteredHead`, split into exited / ending inventory / mortality) and "Calf-to-retail timeline" (summed `durationDays` laid against `horizonMonths`, with the entry window that can still finish) |
+| Stage details (`details`) | `stage-details.tsx` + `stage-economics.tsx` | A stage picker drives the whole panel: profit, profit per animal entering the stage, margin, chance of loss, and P10–P90 range for the picked stage; then "Follow the money"; then a table of every stage (money in, money out, cash profit, total profit, margin, chance of loss) whose rows also select the stage |
 
 `range-bar.tsx`:
 - `domainAcross()` always includes 0 and pads 4%, so every bar shows its distance from break-even.
 - `RangeBar` draws the band and the median tick.
 - `RangeScale` labels P10, P90, and break-even, and hides the break-even label when it would collide.
 
-`stage-economics.tsx` ("Follow the money") has a stage picker and:
+`stage-economics.tsx` ("Follow the money") takes the stage chosen in `stage-details.tsx` and shows:
 - `STAGE_STORY`: static copy about what each stage earns and pays for.
 - **Profit bridge:** money in → cattle purchased → operating → overhead → profit, per head **entering that stage** (`perHead()` divides by `enteredHead` and rounds values under $0.50 to 0).
 - **Expense mix:** a stacked bar of acquisition, operating, and overhead.
@@ -471,7 +470,7 @@ It's optional and BYOK ("bring your own key"). It has **no tools**. It answers f
   - **Status:** the open tab and sections, whether a run is in progress, and whether results are stale.
   - When results are stale, `describeScenarioDifferences()` diffs every labeled input (`INPUT_LABELS`) as `displayed → current`.
   - `describeScenario()`: every input, labeled exactly as the panel labels it.
-  - `describeResults()`: every number on all four tabs, plus the engine's **sensitivity** table. That table isn't shown anywhere in the UI; the assistant is its only consumer.
+  - `describeResults()`: every number on the three tabs (including the **sensitivity** chart), plus the break-even prices, which are computed but not shown on screen.
 - `hasStaleDisplayedResult()` is the same JSON comparison as `isStale` in the hook.
 
 ### 9.3 Prompt: `lib/assistant/prompt.ts` and `metrics.ts`
@@ -543,12 +542,12 @@ These came up while tracing the code. None are fixed here.
 1. **The "1,000 — most stable" Runs option always errors.** `TRIAL_OPTIONS` in `scenario-panel.tsx` offers 1000, but `validateScenario` caps trials at 500, so picking it shows "Trials must be between 1 and 500."
 2. **Negative trends can't be entered.** The trend inputs are `PercentField`s, which clamp at `min = 0`, so the UI only allows flat or rising price and feed trends. The engine handles negative rates fine.
 3. **"Saved baseline" comparison doesn't exist.** The README and the home page's capability copy both say results are compared against a locally saved baseline, but there's no baseline code (and no `localStorage` use) anywhere.
-4. **The monthly profit series is computed but unused.** `SimulationSummary.monthly` isn't shown in the UI and is stripped from the assistant snapshot. The home page copy mentions "monthly profit".
+4. **The monthly profit series is computed but unused.** `SimulationSummary.monthly` isn't shown in the UI and is stripped from the assistant snapshot. The home page copy mentions "monthly profit". Break-even prices are likewise computed but no longer shown; the assistant still receives them.
 5. **The assistant prompt misdescribes entry timing.** `prompt.ts` says calves enter "over the first 12 months". In fact `allocateEntryMonths` spreads entries over the **whole horizon** (repeating the 12-month pattern), except for `upfront`.
 6. **The assistant may hit the 30-message schema cap after the first compaction.** Compaction keeps 12 messages and next triggers 12 user messages later. That's up to 12 + 24 messages, but `/v1/chat` rejects more than 30. Unless the 8,000-token size trigger fires first, about the 22nd user message returns "Invalid assistant request."
 7. **Ending inventory is valued without the price trend.** Sales use `trend(price, …)`, but `terminalInventoryValue` uses the untrended base price. This only matters when trends are non-zero.
-8. **The sensitivity base excludes mortality.** Deterministic runs skip the death draw, so `sensitivityBase` is a bit higher than a real run. It's only visible to the assistant.
-9. **Per-head figures use different denominators.** The Sectors tab divides by *calves entering the chain*. The "Follow the money" bridge divides by *head entering that stage*. The same stage can show two different "per head" numbers.
+8. **The sensitivity base excludes mortality.** Deterministic runs skip the death draw, so `sensitivityBase` is a bit higher than a real run. The "What moves profit most" chart shows changes from this base, not from the headline total.
+9. **Per-head figures use different denominators.** The UI now uses *head entering that stage* everywhere, but `economicProfitPerStartedHead` (per calf entering the chain) is still computed and unused.
 10. **Retail handling cost is hard-coded** at $1.55 per retail lb in `simulateTrial`. It isn't an input and isn't in the USDA profile.
 11. **Worker progress events are dropped.** The worker posts progress, but `useSimulation` has no handler for it.
 

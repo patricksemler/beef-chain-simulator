@@ -119,7 +119,7 @@ describe('dashboard state description', () => {
     const current = snapshot();
     const result = current.displayedResult!;
     const text = describeDashboard(current);
-    expect(text).toContain('Results tab open: "Total profit"');
+    expect(text).toContain('Results tab open: "Profit"');
     expect(text).toContain('Scenario sections expanded: "Prices"');
     expect(text).toContain('nothing is stale');
     expect(text).toContain('Calves entering: 2,000 head');
@@ -140,14 +140,15 @@ describe('dashboard state description', () => {
       );
     }
     expect(text).toContain(
-      `Break-even cattle price: $${result.breakEvenFedPricePerCwt.toFixed(2)}/cwt`,
+      `break-even $${result.breakEvenFedPricePerCwt.toFixed(2)}/cwt`,
     );
     expect(text).toContain(
-      `Break-even beef price: $${result.breakEvenRetailPricePerLb.toFixed(2)}/lb`,
+      `break-even $${result.breakEvenRetailPricePerLb.toFixed(2)}/lb`,
     );
     for (const driver of result.sensitivity) {
-      expect(text).toContain(`- ${driver.label}: -10% →`);
+      expect(text).toContain(`- ${driver.label}: 10% lower →`);
     }
+    expect(text).toContain('"What happened at each stage" card');
   });
 
   it('flags stale results and names the edited inputs', () => {

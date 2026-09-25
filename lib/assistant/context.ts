@@ -4,10 +4,9 @@ import { PHASES } from './metrics';
 import type { DashboardSnapshot, ResultsPage, ScenarioSection } from './types';
 
 export const RESULT_PAGE_LABELS: Record<ResultsPage, string> = {
-  profit: 'Total profit',
-  sectors: 'Profit by sector',
+  profit: 'Profit',
   flow: 'Cattle flow',
-  details: 'Details',
+  details: 'Stage details',
 };
 
 export const SCENARIO_SECTION_LABELS: Record<ScenarioSection, string> = {
@@ -154,10 +153,16 @@ export function describeScenarioDifferences(
 export function describeResults(result: SimulationSummary) {
   const entered = Math.max(result.totalStartedHead, 1);
   const completedShare = result.completedHead / entered;
-  const sectorRows = PHASES.map(({ key, label }) => {
-    const phase = result.phases[key];
-    return `  - ${label}: Profit ${money(phase.economicProfit)}; Per head ${currency(phase.economicProfitPerStartedHead)}; Margin ${pct(phase.margin)}; Range of outcomes P10 ${currency(phase.p10EconomicProfit)} to P90 ${currency(phase.p90EconomicProfit)}; Chance of a loss ${pct(phase.probabilityOfLoss)}`;
-  });
+  const sectorRows = [...PHASES]
+    .sort(
+      (a, b) =>
+        result.phases[b.key].economicProfit -
+        result.phases[a.key].economicProfit,
+    )
+    .map(
+      ({ key, label }) =>
+        `  - ${label}: Profit ${money(result.phases[key].economicProfit)}`,
+    );
   const flowRows = PHASES.map(({ key, label }) => {
     const phase = result.phases[key];
     const share = phase.exitedHead / entered;
@@ -167,46 +172,67 @@ export function describeResults(result: SimulationSummary) {
         : '';
     return `  - ${label}: ${whole(phase.exitedHead)} head exited (${pct(share)} of calves in)${weight}`;
   });
-  const ledgerRows = PHASES.map(({ key, label }) => {
+  const outcomeRows = PHASES.map(({ key, label }) => {
+    const phase = result.phases[key];
+    return `  - ${label}: ${whole(phase.enteredHead)} entered; ${whole(phase.exitedHead)} moved on or sold; ${whole(phase.endingInventoryHead)} still in this stage at period end; ${whole(phase.mortalityHead)} died`;
+  });
+  const journeyDays = PHASES.reduce(
+    (sum, { key }) => sum + result.scenario.phases[key].durationDays,
+    0,
+  );
+  const journeyMonths = journeyDays / 30.4375;
+  const lastEntryMonth = Math.floor(
+    Math.max(result.scenario.horizonMonths - journeyMonths, 0),
+  );
+  const stageRows = PHASES.map(({ key, label }) => {
     const phase = result.phases[key];
     const moneyIn = phase.revenue + phase.terminalInventoryValue;
     const moneyOut =
       phase.acquisitionCost + phase.directCosts + phase.economicCosts;
-    return `  - ${label}: Money in ${currency(moneyIn)} (sales ${currency(phase.revenue)} + ending inventory value ${currency(phase.terminalInventoryValue)}); Money out ${currency(moneyOut)} (buying cattle ${currency(phase.acquisitionCost)} + direct costs ${currency(phase.directCosts)} + overhead ${currency(phase.economicCosts)}); Cash profit ${currency(phase.operatingContribution)}; Total profit ${currency(phase.economicProfit)}`;
+    const perAnimal = phase.economicProfit / Math.max(phase.enteredHead, 1);
+    return `  - ${label}: Money in ${currency(moneyIn)} (sales ${currency(phase.revenue)} + ending inventory value ${currency(phase.terminalInventoryValue)}); Money out ${currency(moneyOut)} (buying cattle ${currency(phase.acquisitionCost)} + direct costs ${currency(phase.directCosts)} + overhead ${currency(phase.economicCosts)}); Cash profit ${currency(phase.operatingContribution)}; Total profit ${currency(phase.economicProfit)}; Per animal entering the stage ${currency(perAnimal)}; Margin ${pct(phase.margin)}; Range of outcomes P10 ${currency(phase.p10EconomicProfit)} to P90 ${currency(phase.p90EconomicProfit)}; Chance of a loss ${pct(phase.probabilityOfLoss)}`;
   });
   const sensitivityRows = [...result.sensitivity]
     .sort((a, b) => b.swing - a.swing)
     .map(
       (driver) =>
-        `  - ${driver.label}: -10% → ${currency(driver.lowEconomicProfit)}; +10% → ${currency(driver.highEconomicProfit)}; swing ${currency(driver.swing)}`,
+        `  - ${driver.label}: 10% lower → ${currency(driver.lowEconomicProfit)}; 10% higher → ${currency(driver.highEconomicProfit)}; bar label ±${money(driver.swing)}`,
     );
+  const retailCushion =
+    (result.scenario.retailPricePerLb - result.breakEvenRetailPricePerLb) /
+    Math.max(result.scenario.retailPricePerLb, 0.01);
+  const fedGap =
+    (result.breakEvenFedPricePerCwt - result.scenario.fedPricePerCwt) /
+    Math.max(result.scenario.fedPricePerCwt, 0.01);
   return [
     `Results are based on the ${result.scenario.referenceYear} USDA profile (${result.dataVintage}). Every result below is a model output, not a USDA statistic.`,
     '',
-    '"Total profit" tab:',
+    '"Profit" tab, headline card:',
     `  - Total profit (headline, median across runs): ${money(result.chainEconomicProfit)}`,
     `  - Range bar under it: P10 ${currency(result.chainP10)} to P90 ${currency(result.chainP90)}`,
     `  - Cash profit (before overhead): ${money(result.chainOperatingContribution)}`,
     `  - Cattle finished: ${whole(result.completedHead)} (${pct(completedShare)} of calves)`,
     `  - Beef produced: ${whole(result.retailPounds)} lb at retail`,
     `  - Chance of a loss: ${pct(result.chainProbabilityOfLoss)} across ${whole(result.scenario.trials)} runs`,
-    '',
-    '"Profit by sector" tab (sorted from most to least profitable on screen):',
+    '"Profit" tab, "Profit by stage" card (bars sorted from most to least profitable):',
     ...sectorRows,
+    `"Profit" tab, "What moves profit most" card (change in total profit when one input moves 10%, from a base case of ${currency(result.sensitivityBase)} run without random price swings):`,
+    ...sensitivityRows,
+    'Break-even prices (computed by the model, not shown on screen):',
+    `  - Retail beef price: today $${result.scenario.retailPricePerLb.toFixed(2)}/lb vs break-even $${result.breakEvenRetailPricePerLb.toFixed(2)}/lb (retail price where total chain profit is zero); ${retailCushion >= 0 ? `${pct(retailCushion)} cushion` : `needs +${pct(-retailCushion)}`}`,
+    `  - Fed cattle price: today ${perCwt(result.scenario.fedPricePerCwt)} vs break-even ${perCwt(result.breakEvenFedPricePerCwt)} (fed price where feedlot profit is zero); ${fedGap <= 0 ? `${pct(-fedGap)} cushion` : `needs +${pct(fedGap)}`}`,
     '',
     '"Cattle flow" tab:',
     `  - ${whole(result.totalStartedHead)} calves in`,
     `  - Current chain status: Completed ${pct(completedShare)}; Still in chain ${pct(result.endingInventoryHead / entered)}; Mortality ${pct(result.mortalityHead / entered)}`,
     ...flowRows,
-    `  - Died: ${whole(result.mortalityHead)}; Still being raised: ${whole(result.endingInventoryHead)}`,
-    `  - Break-even cattle price: ${perCwt(result.breakEvenFedPricePerCwt)} (fed price where feedlot profit is zero)`,
-    `  - Break-even beef price: $${result.breakEvenRetailPricePerLb.toFixed(2)}/lb (retail price where total profit is zero)`,
+    `  - Calf to retail: ${whole(journeyDays)} days; Finished weight: ${whole(result.phases.feedlot.averageExitWeight)} lb; Beef per animal sold: ${whole(result.completedHead > 0 ? result.retailPounds / result.completedHead : 0)} lb; Died: ${whole(result.mortalityHead)}`,
+    '  - "What happened at each stage" card:',
+    ...outcomeRows.map((row) => `  ${row}`),
+    `  - "Calf-to-retail timeline" card: the journey takes about ${journeyMonths.toFixed(1)} months against a ${result.scenario.horizonMonths}-month period, so ${lastEntryMonth > 0 ? `only calves entering in roughly the first ${lastEntryMonth} month(s) can reach retail` : 'no calves can reach retail'} before the period ends`,
     '',
-    '"Details" tab (ledger by sector; the chart shows Money in, Money out, and Total profit):',
-    ...ledgerRows,
-    '',
-    `Sensitivity of total profit to ±10% changes (computed by the model, not shown on screen; base case ${currency(result.sensitivityBase)} without random shocks):`,
-    ...sensitivityRows,
+    '"Stage details" tab (the user picks one stage; the panel shows its profit, per-animal profit, margin, chance of a loss, range of outcomes, a profit bridge, cost mix, and a cost-pressure chart, then a table of all stages):',
+    ...stageRows,
   ].join('\n');
 }
 

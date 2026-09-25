@@ -3,7 +3,7 @@ import type { ScenarioInput, SimulationSummary } from '@/lib/model/types';
 
 export type AssistantProvider = 'openai' | 'google' | 'anthropic';
 
-export type ResultsPage = 'profit' | 'sectors' | 'flow' | 'details';
+export type ResultsPage = 'profit' | 'flow' | 'details';
 
 export type ScenarioSection =
   | 'prices'

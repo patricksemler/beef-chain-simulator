@@ -11,7 +11,7 @@ export const dashboardSnapshotSchema = z
     displayedResult: z.record(z.string(), z.unknown()).nullable(),
     isStale: z.boolean(),
     isRunning: z.boolean(),
-    activeResultsPage: z.enum(['profit', 'sectors', 'flow', 'details']),
+    activeResultsPage: z.enum(['profit', 'flow', 'details']),
     openScenarioSections: z.array(
       z.enum(['prices', 'biology', 'yield', 'risk', 'run', 'sources']),
     ),
