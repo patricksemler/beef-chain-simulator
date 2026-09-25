@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-16",
+  "generatedAt": "2026-09-24",
   "availableYears": [
     2015,
     2016,
@@ -26,25 +26,25 @@
       "label": "Livestock prices and slaughter weights",
       "organization": "USDA Economic Research Service",
       "landingPage": "https://www.ers.usda.gov/data-products/livestock-and-meat-domestic-data",
-      "downloadUrl": "https://www.ers.usda.gov/media/5539/livestock-domestic-data-machine-readable-files.zip?v=50824"
+      "downloadUrl": "https://www.ers.usda.gov/media/5539/livestock-domestic-data-machine-readable-files.zip?v=11562"
     },
     "priceSpreads": {
       "label": "Retail beef and byproduct values",
       "organization": "USDA Economic Research Service",
       "landingPage": "https://www.ers.usda.gov/data-products/meat-price-spreads",
-      "downloadUrl": "https://www.ers.usda.gov/media/5028/historical-monthly-price-spread-data-for-beef-pork-broilers.csv?v=71473"
+      "downloadUrl": "https://www.ers.usda.gov/media/5028/historical-monthly-price-spread-data-for-beef-pork-broilers.csv?v=23751"
     },
     "cowCalf": {
       "label": "Cow-calf costs and returns",
       "organization": "USDA Economic Research Service",
       "landingPage": "https://www.ers.usda.gov/data-products/commodity-costs-and-returns",
-      "downloadUrl": "https://www.ers.usda.gov/media/4982/cow-calf.csv?v=35803"
+      "downloadUrl": "https://www.ers.usda.gov/media/4982/cow-calf.csv?v=20732"
     },
     "feedGrains": {
       "label": "Feed-grain prices",
       "organization": "USDA Economic Research Service",
       "landingPage": "https://www.ers.usda.gov/data-products/feed-grains-database/feed-grains-yearbook-tables",
-      "downloadUrl": "https://www.ers.usda.gov/media/5766/feed-grains-yearbook-tables-all-years.csv?v=88786"
+      "downloadUrl": "https://www.ers.usda.gov/media/5766/feed-grains-yearbook-tables-all-years.csv?v=23000"
     }
   },
   "years": {
