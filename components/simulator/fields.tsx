@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, type ComponentProps } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -63,6 +64,43 @@ export function SelectField({
 }
 
 /**
+ * A controlled number input that keeps what the user typed while they edit.
+ * Binding a number straight to `value` turns a cleared field into "0", and
+ * typing after it leaves "01" on screen because React sees 01 == 1 and skips
+ * the update. Valid entries still commit on every keystroke; the draft is
+ * dropped on blur so the field settles on the committed, clamped value.
+ */
+export function NumericInput({
+  value,
+  onValueChange,
+  ...props
+}: Omit<ComponentProps<typeof Input>, 'value' | 'onChange' | 'type'> & {
+  value: number;
+  onValueChange: (value: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+
+  return (
+    <Input
+      {...props}
+      type="number"
+      value={draft ?? (Number.isFinite(value) ? String(value) : '0')}
+      onChange={(event) => {
+        const raw = event.target.value;
+        setDraft(raw);
+        if (raw.trim() === '') return;
+        const next = Number(raw);
+        if (Number.isFinite(next)) onValueChange(next);
+      }}
+      onBlur={(event) => {
+        setDraft(null);
+        props.onBlur?.(event);
+      }}
+    />
+  );
+}
+
+/**
  * A labelled numeric field. `unit` is rendered inside the label so it is part
  * of the accessible name instead of being a decorative overlay.
  */
@@ -91,22 +129,17 @@ export function NumberField({
         {label}
         {unit ? <span className="field-unit">{unit}</span> : null}
       </Label>
-      <Input
+      <NumericInput
         id={id}
         name={id}
-        type="number"
         inputMode="decimal"
         autoComplete="off"
         spellCheck={false}
         min={min}
         max={max}
         step={step}
-        value={Number.isFinite(value) ? value : 0}
-        onChange={(event) => {
-          const next = Number(event.target.value);
-          if (Number.isNaN(next)) return;
-          onChange(clamp(next, min, max));
-        }}
+        value={value}
+        onValueChange={(next) => onChange(clamp(next, min, max))}
         className="bg-white tabular-nums"
       />
     </div>

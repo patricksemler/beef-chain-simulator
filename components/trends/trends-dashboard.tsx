@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { IndexChart } from '@/components/trends/index-chart';
 import { SeriesPicker } from '@/components/trends/series-picker';
 import { SeriesTable } from '@/components/trends/series-table';
 import { TrendChart } from '@/components/trends/trend-chart';
@@ -121,6 +122,22 @@ export function TrendsDashboard() {
             <dd>{formatValue(series, low[series])}</dd>
           </div>
         </dl>
+      </section>
+
+      <section className="site-section trend" aria-labelledby="index-title">
+        <div className="trend-head">
+          <h2 id="index-title">
+            Across the chain
+            <span className="trend-unit">{first.year} = 100</span>
+          </h2>
+          <p className="trend-note">
+            Every series rebased to the same starting point, so moves in $/cwt,
+            $/lb and $/ton can be compared directly. Hover a line to identify
+            it; click to select it.
+          </p>
+        </div>
+
+        <IndexChart rows={rows} selected={series} onSelect={setSeries} />
       </section>
 
       <section className="site-section" aria-label="Full dataset">

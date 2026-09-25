@@ -8,11 +8,11 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import {
   NumberField,
+  NumericInput,
   PercentField,
   SelectField,
 } from '@/components/simulator/fields';
@@ -165,10 +165,9 @@ export function ScenarioPanel({
                   {whole(scenario.totalHead)} head
                 </span>
               </div>
-              <Input
+              <NumericInput
                 id="assistant-total-head"
                 name="totalHead"
-                type="number"
                 inputMode="numeric"
                 autoComplete="off"
                 spellCheck={false}
@@ -176,14 +175,12 @@ export function ScenarioPanel({
                 max={MAX_HEAD}
                 step={1}
                 value={scenario.totalHead}
-                onChange={(event) => {
-                  const next = Number(event.target.value);
-                  if (Number.isNaN(next)) return;
+                onValueChange={(next) =>
                   updateNumber(
                     'totalHead',
                     Math.min(MAX_HEAD, Math.max(1, Math.round(next))),
-                  );
-                }}
+                  )
+                }
                 className="bg-white text-lg font-semibold tabular-nums"
               />
               <div className="pt-0.5">
@@ -257,23 +254,22 @@ export function ScenarioPanel({
                       >
                         {month}
                       </Label>
-                      <Input
+                      <NumericInput
                         id={`cadence-${index}`}
                         name={`cadence-${month.toLowerCase()}`}
-                        type="number"
                         inputMode="decimal"
                         autoComplete="off"
                         spellCheck={false}
                         min={0}
                         step={0.1}
                         value={scenario.customCadence[index]}
-                        onChange={(event) =>
+                        onValueChange={(next) =>
                           setScenario((current) => ({
                             ...current,
                             customCadence: current.customCadence.map(
                               (weight, itemIndex) =>
                                 itemIndex === index
-                                  ? Math.max(0, Number(event.target.value) || 0)
+                                  ? Math.max(0, next)
                                   : weight,
                             ),
                           }))

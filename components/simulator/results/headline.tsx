@@ -1,11 +1,21 @@
-import { RangeBar, RangeScale, domainAcross } from '@/components/simulator/results/range-bar';
-import { compactCurrency, compactNumber, percent, whole } from '@/lib/model/format';
+import {
+  RangeBar,
+  RangeScale,
+  domainAcross,
+} from '@/components/simulator/results/range-bar';
+import {
+  compactCurrency,
+  compactNumber,
+  percent,
+  whole,
+} from '@/lib/model/format';
 import type { SimulationSummary } from '@/lib/model/types';
 
 export function Headline({ result }: { result: SimulationSummary }) {
   const profit = result.chainEconomicProfit;
   const domain = domainAcross([result.chainP10, result.chainP90, profit]);
-  const completedShare = result.completedHead / Math.max(result.totalStartedHead, 1);
+  const completedShare =
+    result.completedHead / Math.max(result.totalStartedHead, 1);
 
   return (
     <section className="headline" aria-labelledby="headline-heading">
@@ -29,7 +39,11 @@ export function Headline({ result }: { result: SimulationSummary }) {
             color="var(--accent-strong)"
             label="Total profit"
           />
-          <RangeScale low={result.chainP10} high={result.chainP90} domain={domain} />
+          <RangeScale
+            low={result.chainP10}
+            high={result.chainP90}
+            domain={domain}
+          />
         </div>
       </div>
 

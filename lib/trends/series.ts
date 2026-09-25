@@ -176,3 +176,28 @@ export const SERIES_SUMMARY: Record<SeriesKey, SeriesSummary> = {
   retailPricePerLb: summarize('retailPricePerLb'),
   feedCostPerTon: summarize('feedCostPerTon'),
 };
+
+/** A row of index values: each series as a share of its base-year value. */
+export type IndexRow = { year: number } & Record<SeriesKey, number>;
+
+/**
+ * Rebases every series so the first row reads 100. Prices quoted in $/cwt,
+ * $/lb and $/ton can then share one axis and be compared as movements.
+ */
+export function indexRows(rows: readonly SeriesRow[]): IndexRow[] {
+  const base = rows[0];
+  return rows.map((row) => {
+    const indexed = { year: row.year } as IndexRow;
+    for (const key of ALL_SERIES) indexed[key] = (row[key] / base[key]) * 100;
+    return indexed;
+  });
+}
+
+/**
+ * Percent change from the prior year for one series, or null for the first
+ * year in the dataset, which has nothing to compare against.
+ */
+export function yearOverYear(key: SeriesKey, index: number): number | null {
+  if (index === 0) return null;
+  return percentChange(ROWS[index - 1][key], ROWS[index][key]);
+}
