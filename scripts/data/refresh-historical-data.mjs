@@ -39,6 +39,21 @@ const SOURCES = {
       'https://www.ers.usda.gov/data-products/feed-grains-database/feed-grains-yearbook-tables',
     downloadPattern: /feed-grains-yearbook-tables-all-years\.csv/i,
   },
+  grading: {
+    label: 'Steer and heifer quality grade shares',
+    organization: 'USDA Agricultural Marketing Service',
+    landingPage:
+      'https://esmis.nal.usda.gov/publication/national-steer-and-heifer-estimated-grading-percent-report-csv',
+    downloadPattern: /NW_LS903\.TXT/i,
+  },
+};
+
+const LMR_API = 'https://mpr.datamart.ams.usda.gov/services/v1.1/reports';
+const LMR_SOURCE = {
+  label: 'Boxed beef cutout and Prime/Choice cut prices (LM_XB459, LM_XB456)',
+  organization: 'USDA Agricultural Marketing Service',
+  landingPage: 'https://mpr.datamart.ams.usda.gov/',
+  downloadUrl: `${LMR_API}/2461`,
 };
 
 const BASE_2025 = {
@@ -202,12 +217,125 @@ function scaledPhaseCosts(operatingIndex, overheadIndex) {
   );
 }
 
-function fileFromZip(files, filename) {
+async function fetchJson(url) {
+  return JSON.parse(await fetchText(url));
+}
+
+function numeric(value) {
+  const parsed = Number(String(value ?? '').replaceAll(/[,%]/g, ''));
+  return value === null || value === '' || !Number.isFinite(parsed)
+    ? null
+    : parsed;
+}
+
+async function lmrSection(reportId, section, year) {
+  const url = `${LMR_API}/${reportId}/${encodeURIComponent(section)}?q=report_date=01/01/${year}:12/31/${year}`;
+  const body = await fetchJson(url);
+  if (!Array.isArray(body.results))
+    throw new Error(`Unexpected LMR response for ${url}`);
+  return body.results;
+}
+
+/** Annual mean of weekly national grade shares, with "Other" folded into Select. */
+function annualGradeMix(rows, year, minimumWeeks = 40) {
+  const weeks = rows
+    .filter((row) => row['WeekEnd Date']?.endsWith(`/${year}`))
+    .map((row) => ({
+      prime: numeric(row['National Prime']),
+      choice: numeric(row['National Choice']),
+      select: numeric(row['National Select']),
+      other: numeric(row['National Other']),
+    }))
+    .filter((week) => Object.values(week).every((value) => value !== null));
+  if (weeks.length < minimumWeeks) return null;
+  const prime = mean(weeks.map((week) => week.prime));
+  const choice = mean(weeks.map((week) => week.choice));
+  const select = mean(weeks.map((week) => week.select + week.other));
+  const total = prime + choice + select;
+  return {
+    prime: round(prime / total, 4),
+    choice: round(1 - round(prime / total, 4) - round(select / total, 4), 4),
+    select: round(select / total, 4),
+  };
+}
+
+/** Select cutout divided by Choice cutout, averaged over the year's weekly reports. */
+function annualSelectIndex(cutoutRows) {
+  const weeks = cutoutRows
+    .map((row) => ({
+      choice: numeric(row.choice_600_900_simple_avg),
+      select: numeric(row.select_600_900_simple_avg),
+    }))
+    .filter((week) => week.choice && week.select);
+  if (weeks.length < 40) return null;
+  return (
+    mean(weeks.map((week) => week.select)) /
+    mean(weeks.map((week) => week.choice))
+  );
+}
+
+function annualCutPrices(rows) {
+  const totals = new Map();
+  for (const row of rows) {
+    const code = /\(([^)]+)\)\s*$/
+      .exec(row.item_description ?? '')?.[1]
+      .replaceAll(/\s+/g, ' ')
+      .trim();
+    const pounds = numeric(row.total_pounds);
+    const price = numeric(row.weighted_average);
+    if (!code || !pounds || !price) continue;
+    const total = totals.get(code) ?? { value: 0, pounds: 0 };
+    total.value += pounds * price;
+    total.pounds += pounds;
+    totals.set(code, total);
+  }
+  return new Map(
+    [...totals].map(([code, total]) => [
+      code,
+      { price: total.value / total.pounds, pounds: total.pounds },
+    ]),
+  );
+}
+
+/**
+ * Prime-to-Choice price ratio across cuts traded in both grades, weighted by
+ * Choice volume. Matched cuts are mostly rib and loin items, so this leans high
+ * relative to a whole-carcass Prime premium.
+ */
+function annualPrimeIndex(primeRows, choiceRows) {
+  const prime = annualCutPrices(primeRows);
+  const choice = annualCutPrices(choiceRows);
+  let weighted = 0;
+  let pounds = 0;
+  for (const [code, primeCut] of prime) {
+    const choiceCut = choice.get(code);
+    if (!choiceCut) continue;
+    weighted += (primeCut.price / choiceCut.price) * choiceCut.pounds;
+    pounds += choiceCut.pounds;
+  }
+  return pounds > 0 ? weighted / pounds : null;
+}
+
+async function annualLmrIndexes(year) {
+  const [cutout, choiceCuts, primeCuts] = await Promise.all([
+    lmrSection(2461, 'Weekly Average Cutout Values', year),
+    lmrSection(2461, 'Choice Cuts', year),
+    lmrSection(2460, 'Prime Cuts', year),
+  ]);
+  return {
+    selectIndex: annualSelectIndex(cutout),
+    primeIndex: annualPrimeIndex(primeCuts, choiceCuts),
+  };
+}
+
+function fileFromZip(files, ...filenames) {
   const entry = Object.entries(files).find(([path]) =>
-    path.endsWith(`/${filename}`),
+    filenames.some((filename) => path.endsWith(`/${filename}`)),
   );
   if (!entry)
-    throw new Error(`${filename} was not found in the livestock archive.`);
+    throw new Error(
+      `${filenames.join(' or ')} was not found in the livestock archive.`,
+    );
   return entry[1];
 }
 
@@ -220,22 +348,26 @@ async function main() {
       ]),
     ),
   );
-  const [livestockZip, priceSpreadsCsv, cowCalfCsv, feedGrainsCsv] =
+  const [livestockZip, priceSpreadsCsv, cowCalfCsv, feedGrainsCsv, gradingCsv] =
     await Promise.all([
       download(discovered.livestock),
       download(discovered.priceSpreads),
       download(discovered.cowCalf),
       download(discovered.feedGrains),
+      download(discovered.grading),
     ]);
 
   const livestockFiles = unzipSync(livestockZip);
   const livestockPrices = csvRows(
     fileFromZip(livestockFiles, 'LivestockPrices.csv'),
   );
-  const meatStats = csvRows(fileFromZip(livestockFiles, 'MeatStats.csv'));
+  const meatStats = csvRows(
+    fileFromZip(livestockFiles, 'Meat-Statistics.csv', 'MeatStats.csv'),
+  );
   const priceSpreads = csvRows(priceSpreadsCsv);
   const cowCalf = csvRows(cowCalfCsv);
   const feedGrains = csvRows(feedGrainsCsv);
+  const grading = csvRows(gradingCsv);
 
   const latestCandidate = Math.max(
     ...cowCalf
@@ -292,7 +424,7 @@ async function main() {
       priceSpreads,
       'Year',
       year,
-      (row) => row.Data_Item === 'All fresh beef retail value',
+      (row) => row.Data_Item === 'Choice beef retail value',
       'Value',
     );
     const wholesale = annualMonthlyMean(
@@ -330,6 +462,15 @@ async function main() {
     const operating = annualCowCost(cowCalf, year, 'Total, operating costs');
     const overhead = annualCowCost(cowCalf, year, 'Total, allocated overhead');
     const corn = annualCornPrice(feedGrains, year);
+    const { selectIndex, primeIndex } = await annualLmrIndexes(year);
+    // The weekly grading report was discontinued after December 2024, so later
+    // years reuse the most recent complete year's mix.
+    let gradeMixYear = year;
+    let gradeMix = annualGradeMix(grading, year);
+    while (!gradeMix && gradeMixYear > START_YEAR) {
+      gradeMixYear -= 1;
+      gradeMix = annualGradeMix(grading, gradeMixYear);
+    }
     const required = {
       ...prices,
       wholesale,
@@ -340,6 +481,9 @@ async function main() {
       operating,
       overhead,
       corn,
+      selectIndex,
+      primeIndex,
+      gradeMix,
     };
     const missing = Object.entries(required)
       .filter(([, value]) => value === null)
@@ -365,8 +509,15 @@ async function main() {
         BASE_2025.byproductCreditPerHead * (byproduct / referenceByproduct),
       ),
       dressingPercentage: round(dressedWeight / liveWeight, 4),
+      gradeMix,
+      gradeMixYear,
+      gradePriceIndex: {
+        prime: round(primeIndex, 3),
+        select: round(selectIndex, 3),
+      },
       phases: scaledPhaseCosts(operatingIndex, overheadIndex),
       sourceMetrics: {
+        choiceBeefRetailCentsPerLb: round(retail),
         cornPricePerBushel: round(corn),
         cowCalfOperatingCostPerCow: round(operating),
         cowCalfAllocatedOverheadPerCow: round(overhead),
@@ -401,18 +552,27 @@ async function main() {
       byproductCredit: `The app's $${BASE_2025.byproductCreditPerHead}/head ${latestCandidate} credit indexed by the USDA ERS Choice beef byproduct value.`,
       dressingPercentage:
         'Annual average federally inspected dressed weight divided by annual average federally inspected live weight.',
+      retailPrice:
+        'USDA ERS Choice beef retail value, so retail sells the same grade it buys at the Choice wholesale value.',
+      gradeMix:
+        'Annual mean of the weekly USDA AMS national steer and heifer grading shares, with "Other" (Standard and ungraded) folded into Select. The weekly report ended in December 2024; later years reuse the latest complete year, recorded as gradeMixYear.',
+      gradePriceIndex:
+        'Select: USDA LMR weekly Select cutout divided by Choice cutout. Prime: USDA LMR Prime cut prices divided by the same Choice cuts (matched by IMPS code), weighted by Choice volume. Matched cuts are mostly rib and loin, so the Prime index leans high. Both indexes are applied to Choice wholesale and retail values; USDA does not publish Prime or Select retail values.',
     },
-    sources: Object.fromEntries(
-      Object.entries(SOURCES).map(([key, source]) => [
-        key,
-        {
-          label: source.label,
-          organization: source.organization,
-          landingPage: source.landingPage,
-          downloadUrl: discovered[key],
-        },
-      ]),
-    ),
+    sources: {
+      ...Object.fromEntries(
+        Object.entries(SOURCES).map(([key, source]) => [
+          key,
+          {
+            label: source.label,
+            organization: source.organization,
+            landingPage: source.landingPage,
+            downloadUrl: discovered[key],
+          },
+        ]),
+      ),
+      lmr: LMR_SOURCE,
+    },
     years,
   };
 

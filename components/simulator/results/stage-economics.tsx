@@ -11,6 +11,7 @@ import {
   YAxis,
 } from 'recharts';
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
+import { GradeBreakdown } from '@/components/simulator/results/grade-breakdown';
 import { PHASE_META } from '@/components/simulator/results/phases';
 import { compactCurrency, currency } from '@/lib/model/format';
 import type {
@@ -318,6 +319,8 @@ export function StageEconomics({
           </p>
         </div>
       </div>
+
+      {selectedKey === 'retail' ? <GradeBreakdown result={result} /> : null}
     </div>
   );
 }

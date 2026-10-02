@@ -1,5 +1,13 @@
 export type PhaseKey = 'cowCalf' | 'stocker' | 'feedlot' | 'packer' | 'retail';
 
+export type GradeKey = 'prime' | 'choice' | 'select';
+
+/** Share of saleable beef in each USDA quality grade; shares sum to 1. */
+export type GradeMix = Record<GradeKey, number>;
+
+/** Prime and Select prices as a multiple of the Choice price (Choice = 1). */
+export type GradePriceIndex = Record<Exclude<GradeKey, 'choice'>, number>;
+
 export type EntryCadence = 'even' | 'upfront' | 'spring' | 'fall' | 'custom';
 
 export interface PhaseAssumptions {
@@ -42,6 +50,8 @@ export interface ScenarioInput {
   dressingPercentage: number;
   saleableYield: number;
   feedDryMatterLbPerDay: number;
+  gradeMix: GradeMix;
+  gradePriceIndex: GradePriceIndex;
   annualCattlePriceTrend: number;
   annualWholesalePriceTrend: number;
   annualRetailPriceTrend: number;
@@ -83,6 +93,24 @@ export interface MonthlyResult {
   chain: number;
 }
 
+export interface GradeResult {
+  key: GradeKey;
+  share: number;
+  priceIndex: number;
+  pounds: number;
+  revenue: number;
+  beefCost: number;
+  storeCost: number;
+  profit: number;
+  /** Per-pound figures cover beef sold; the totals above also include beef on hand. */
+  pricePerLb: number;
+  beefCostPerLb: number;
+  storeCostPerLb: number;
+  profitPerLb: number;
+  p10Profit: number;
+  p90Profit: number;
+}
+
 export interface SensitivityResult {
   key: string;
   label: string;
@@ -104,6 +132,8 @@ export interface SimulationSummary {
   mortalityHead: number;
   endingInventoryHead: number;
   retailPounds: number;
+  /** Retail stage profit split across USDA quality grades. */
+  retailByGrade: Record<GradeKey, GradeResult>;
   chainEconomicProfit: number;
   chainOperatingContribution: number;
   chainP10: number;

@@ -49,6 +49,14 @@ describe('scenario validation', () => {
     expect(validateScenario(scenario)).toHaveLength(3);
   });
 
+  it('rejects grade shares that do not add up to 100%', () => {
+    const scenario = quickScenario();
+    scenario.gradeMix = { prime: 0.5, choice: 0.5, select: 0.5 };
+    expect(validateScenario(scenario)).toContain(
+      'Grade shares must each be 0-100% and add up to 100%.',
+    );
+  });
+
   it('rejects a reference year without a complete USDA profile', () => {
     const scenario = quickScenario();
     scenario.referenceYear = 2014;
@@ -82,7 +90,28 @@ describe('historical USDA profiles', () => {
     expect(historical.calfPricePerCwt).toBe(254.54);
     expect(historical.feederPricePerCwt).toBe(202.37);
     expect(historical.wholesalePricePerLb).toBe(3.628);
-    expect(historical.retailPricePerLb).toBe(6.038);
+    expect(historical.retailPricePerLb).toBe(6.289);
+    expect(historical.gradeMix).toEqual({
+      prime: 0.0513,
+      choice: 0.691,
+      select: 0.2577,
+    });
+  });
+
+  it('has a complete grade mix and price indexes for every year', () => {
+    for (const year of AVAILABLE_HISTORICAL_YEARS) {
+      const { gradeMix, gradePriceIndex } = applyHistoricalYear(
+        quickScenario(),
+        year,
+      );
+      expect(gradeMix.prime + gradeMix.choice + gradeMix.select).toBeCloseTo(
+        1,
+        6,
+      );
+      expect(gradePriceIndex.prime).toBeGreaterThan(1);
+      expect(gradePriceIndex.select).toBeGreaterThan(0);
+      expect(gradePriceIndex.select).toBeLessThan(1);
+    }
   });
 
   it('changes sector economics across historical years', () => {
@@ -249,5 +278,87 @@ describe('simulation accounting', () => {
       result.chainProbabilityOfLoss === 0 ||
         result.chainProbabilityOfLoss === 1,
     ).toBe(true);
+  });
+});
+
+describe('retail grade breakdown', () => {
+  it('splits retail totals exactly across grades', () => {
+    const result = runSimulation(quickScenario());
+    const retail = result.phases.retail;
+    const grades = Object.values(result.retailByGrade);
+    const sum = (pick: (grade: (typeof grades)[number]) => number) =>
+      grades.reduce((total, grade) => total + pick(grade), 0);
+    expect(sum((grade) => grade.revenue)).toBeCloseTo(
+      retail.revenue + retail.terminalInventoryValue,
+      4,
+    );
+    expect(sum((grade) => grade.beefCost)).toBeCloseTo(
+      retail.acquisitionCost,
+      4,
+    );
+    expect(sum((grade) => grade.storeCost)).toBeCloseTo(
+      retail.directCosts + retail.economicCosts,
+      4,
+    );
+    expect(sum((grade) => grade.profit)).toBeCloseTo(retail.economicProfit, 4);
+    expect(sum((grade) => grade.pounds)).toBeCloseTo(result.retailPounds, 4);
+  });
+
+  it('prices each grade per pound at Choice times its index', () => {
+    const scenario = quickScenario();
+    scenario.biologicalVariation = 0;
+    for (const phase of Object.values(scenario.phases)) phase.mortalityRate = 0;
+    for (const key of Object.keys(scenario.marketRisk) as Array<
+      keyof typeof scenario.marketRisk
+    >)
+      scenario.marketRisk[key] = key === 'commonMarketCorrelation' ? 0.65 : 0;
+    const { retailByGrade } = runSimulation(scenario);
+    expect(retailByGrade.choice.pricePerLb).toBeCloseTo(
+      scenario.retailPricePerLb,
+      6,
+    );
+    expect(retailByGrade.prime.pricePerLb).toBeCloseTo(
+      scenario.retailPricePerLb * scenario.gradePriceIndex.prime,
+      6,
+    );
+    expect(retailByGrade.select.beefCostPerLb).toBeCloseTo(
+      scenario.wholesalePricePerLb * scenario.gradePriceIndex.select,
+      6,
+    );
+    expect(retailByGrade.choice.storeCostPerLb).toBeCloseTo(1.55, 6);
+  });
+
+  it('earns the most per pound on Prime and the least on Select', () => {
+    const { retailByGrade } = runSimulation(quickScenario());
+    expect(retailByGrade.prime.profitPerLb).toBeGreaterThan(
+      retailByGrade.choice.profitPerLb,
+    );
+    expect(retailByGrade.choice.profitPerLb).toBeGreaterThan(
+      retailByGrade.select.profitPerLb,
+    );
+  });
+
+  it('raises chain profit when more cattle grade Prime', () => {
+    const base = quickScenario();
+    const morePrime = structuredClone(base);
+    morePrime.gradeMix = {
+      prime: base.gradeMix.prime + 0.1,
+      choice: base.gradeMix.choice - 0.1,
+      select: base.gradeMix.select,
+    };
+    expect(runSimulation(morePrime).chainEconomicProfit).toBeGreaterThan(
+      runSimulation(base).chainEconomicProfit,
+    );
+  });
+
+  it('ignores the mix when every grade sells at the Choice price', () => {
+    const allChoicePrices = quickScenario();
+    allChoicePrices.gradePriceIndex = { prime: 1, select: 1 };
+    const differentMix = structuredClone(allChoicePrices);
+    differentMix.gradeMix = { prime: 0.4, choice: 0.2, select: 0.4 };
+    expect(runSimulation(differentMix).chainEconomicProfit).toBeCloseTo(
+      runSimulation(allChoicePrices).chainEconomicProfit,
+      4,
+    );
   });
 });

@@ -132,6 +132,23 @@ export function ScenarioPanel({
       },
     }));
 
+  /** Edits Prime or Select; Choice takes whatever share is left. */
+  const updateGradeShare = (key: 'prime' | 'select', value: number) =>
+    setScenario((current) => {
+      const gradeMix = { ...current.gradeMix, [key]: value };
+      gradeMix.choice = Math.max(
+        0,
+        Math.round((1 - gradeMix.prime - gradeMix.select) * 10_000) / 10_000,
+      );
+      return { ...current, gradeMix };
+    });
+
+  const updateGradeIndex = (key: 'prime' | 'select', value: number) =>
+    setScenario((current) => ({
+      ...current,
+      gradePriceIndex: { ...current.gradePriceIndex, [key]: value },
+    }));
+
   const updateRisk = (key: keyof ScenarioInput['marketRisk'], value: number) =>
     setScenario((current) => ({
       ...current,
@@ -291,62 +308,114 @@ export function ScenarioPanel({
             className="border-t border-[var(--line)]"
           >
             <Section value="prices" title="Prices">
-              <div className="field-grid">
-                <NumberField
-                  id="calf-price"
-                  label="Weaned calf"
-                  unit="$/cwt"
-                  value={scenario.calfPricePerCwt}
-                  onChange={(value) => updateNumber('calfPricePerCwt', value)}
-                />
-                <NumberField
-                  id="feeder-price"
-                  label="Feeder cattle"
-                  unit="$/cwt"
-                  value={scenario.feederPricePerCwt}
-                  onChange={(value) => updateNumber('feederPricePerCwt', value)}
-                />
-                <NumberField
-                  id="fed-price"
-                  label="Fed cattle"
-                  unit="$/cwt"
-                  value={scenario.fedPricePerCwt}
-                  onChange={(value) => updateNumber('fedPricePerCwt', value)}
-                />
-                <NumberField
-                  id="wholesale-price"
-                  label="Wholesale beef"
-                  unit="$/lb"
-                  step={0.01}
-                  value={scenario.wholesalePricePerLb}
-                  onChange={(value) =>
-                    updateNumber('wholesalePricePerLb', value)
-                  }
-                />
-                <NumberField
-                  id="retail-price"
-                  label="Retail beef"
-                  unit="$/lb"
-                  step={0.01}
-                  value={scenario.retailPricePerLb}
-                  onChange={(value) => updateNumber('retailPricePerLb', value)}
-                />
-                <NumberField
-                  id="feed-cost"
-                  label="Feed"
-                  unit="$/ton"
-                  value={scenario.feedCostPerTon}
-                  onChange={(value) => updateNumber('feedCostPerTon', value)}
-                />
-                <NumberField
-                  id="byproduct-credit"
-                  label="Byproduct"
-                  unit="$/head"
-                  value={scenario.byproductCreditPerHead}
-                  onChange={(value) =>
-                    updateNumber('byproductCreditPerHead', value)
-                  }
-                />
+              <div className="space-y-4">
+                <div className="field-grid">
+                  <NumberField
+                    id="calf-price"
+                    label="Weaned calf"
+                    unit="$/cwt"
+                    value={scenario.calfPricePerCwt}
+                    onChange={(value) => updateNumber('calfPricePerCwt', value)}
+                  />
+                  <NumberField
+                    id="feeder-price"
+                    label="Feeder cattle"
+                    unit="$/cwt"
+                    value={scenario.feederPricePerCwt}
+                    onChange={(value) =>
+                      updateNumber('feederPricePerCwt', value)
+                    }
+                  />
+                  <NumberField
+                    id="fed-price"
+                    label="Fed cattle"
+                    unit="$/cwt"
+                    value={scenario.fedPricePerCwt}
+                    onChange={(value) => updateNumber('fedPricePerCwt', value)}
+                  />
+                  <NumberField
+                    id="wholesale-price"
+                    label="Wholesale beef (Choice)"
+                    unit="$/lb"
+                    step={0.01}
+                    value={scenario.wholesalePricePerLb}
+                    onChange={(value) =>
+                      updateNumber('wholesalePricePerLb', value)
+                    }
+                  />
+                  <NumberField
+                    id="retail-price"
+                    label="Retail beef (Choice)"
+                    unit="$/lb"
+                    step={0.01}
+                    value={scenario.retailPricePerLb}
+                    onChange={(value) =>
+                      updateNumber('retailPricePerLb', value)
+                    }
+                  />
+                  <NumberField
+                    id="feed-cost"
+                    label="Feed"
+                    unit="$/ton"
+                    value={scenario.feedCostPerTon}
+                    onChange={(value) => updateNumber('feedCostPerTon', value)}
+                  />
+                  <NumberField
+                    id="byproduct-credit"
+                    label="Byproduct"
+                    unit="$/head"
+                    value={scenario.byproductCreditPerHead}
+                    onChange={(value) =>
+                      updateNumber('byproductCreditPerHead', value)
+                    }
+                  />
+                </div>
+                <fieldset
+                  className="phase-group"
+                  aria-labelledby="grade-mix-heading"
+                >
+                  <h4 id="grade-mix-heading" className="phase-legend">
+                    Carcass grade mix
+                  </h4>
+                  <div className="field-grid">
+                    <PercentField
+                      id="grade-prime-share"
+                      label="Prime share"
+                      value={scenario.gradeMix.prime}
+                      max={round((1 - scenario.gradeMix.select) * 100, 2)}
+                      onChange={(value) => updateGradeShare('prime', value)}
+                    />
+                    <PercentField
+                      id="grade-select-share"
+                      label="Select share"
+                      value={scenario.gradeMix.select}
+                      max={round((1 - scenario.gradeMix.prime) * 100, 2)}
+                      onChange={(value) => updateGradeShare('select', value)}
+                    />
+                    <PercentField
+                      id="grade-prime-premium"
+                      label="Prime vs Choice"
+                      value={round(scenario.gradePriceIndex.prime - 1, 4)}
+                      max={400}
+                      onChange={(value) => updateGradeIndex('prime', 1 + value)}
+                    />
+                    <PercentField
+                      id="grade-select-discount"
+                      label="Select below Choice"
+                      value={round(1 - scenario.gradePriceIndex.select, 4)}
+                      max={99}
+                      onChange={(value) =>
+                        updateGradeIndex('select', 1 - value)
+                      }
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Choice is the remaining{' '}
+                    {(scenario.gradeMix.choice * 100).toFixed(1)}%. Prime and
+                    Select sell at Choice prices adjusted by these amounts at
+                    wholesale and retail.
+                  </p>
+                </fieldset>
               </div>
             </Section>
 
@@ -669,4 +738,9 @@ function Section({
       <AccordionContent className="pb-4">{children}</AccordionContent>
     </AccordionItem>
   );
+}
+
+function round(value: number, places: number) {
+  const factor = 10 ** places;
+  return Math.round(value * factor) / factor;
 }

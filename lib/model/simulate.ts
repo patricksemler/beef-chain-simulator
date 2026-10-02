@@ -1,6 +1,8 @@
 import { historicalDataVintage, isHistoricalYear } from './historical';
 import type {
   EntryCadence,
+  GradeKey,
+  GradeResult,
   MonthlyResult,
   PhaseKey,
   PhaseResult,
@@ -18,6 +20,9 @@ const PHASES: PhaseKey[] = [
   'retail',
 ];
 const MONTH_DAYS = 30.4375;
+const GRADES: GradeKey[] = ['prime', 'choice', 'select'];
+/** Retail store operating cost per pound of saleable beef. */
+const RETAIL_COST_PER_LB = 1.55;
 
 type Ledger = Omit<
   PhaseResult,
@@ -36,9 +41,17 @@ interface TrialResult {
   mortalityHead: number;
   endingInventoryHead: number;
   retailPounds: number;
+  /** Retail dollars for beef actually sold, excluding beef still on hand. */
+  retailSales: RetailSales;
   chainEconomicProfit: number;
   chainOperatingContribution: number;
   fedLiveCwtSold: number;
+}
+
+interface RetailSales {
+  revenue: number;
+  beefCost: number;
+  storeCost: number;
 }
 function mulberry32(seed: number) {
   let value = seed >>> 0;
@@ -69,6 +82,75 @@ function percentile(values: number[], quantile: number) {
 
 function clamp(value: number, minimum: number, maximum: number) {
   return Math.min(maximum, Math.max(minimum, value));
+}
+
+function gradePriceIndex(input: ScenarioInput, key: GradeKey) {
+  return key === 'choice' ? 1 : input.gradePriceIndex[key];
+}
+
+/** Mix-weighted price multiplier applied to Choice wholesale and retail prices. */
+export function blendedGradeIndex(input: ScenarioInput) {
+  return GRADES.reduce(
+    (sum, key) => sum + input.gradeMix[key] * gradePriceIndex(input, key),
+    0,
+  );
+}
+
+type GradeSplit = Omit<
+  GradeResult,
+  'key' | 'share' | 'priceIndex' | 'p10Profit' | 'p90Profit'
+>;
+
+/**
+ * Splits a retail ledger across grades. Sales and beef purchases follow each
+ * grade's share of value (share x price index); store costs follow its share of
+ * pounds. The grade rows sum to the ledger's totals. Per-pound figures use only
+ * beef actually sold, since the totals also carry beef still on hand.
+ */
+function splitRetailByGrade(
+  input: ScenarioInput,
+  ledger: Pick<
+    Ledger,
+    | 'revenue'
+    | 'terminalInventoryValue'
+    | 'acquisitionCost'
+    | 'directCosts'
+    | 'economicCosts'
+  >,
+  pounds: number,
+  sales: RetailSales,
+): Record<GradeKey, GradeSplit> {
+  const blended = Math.max(blendedGradeIndex(input), Number.EPSILON);
+  return Object.fromEntries(
+    GRADES.map((key) => {
+      const share = input.gradeMix[key];
+      const valueShare = (share * gradePriceIndex(input, key)) / blended;
+      const revenue =
+        (ledger.revenue + ledger.terminalInventoryValue) * valueShare;
+      const beefCost = ledger.acquisitionCost * valueShare;
+      const storeCost = (ledger.directCosts + ledger.economicCosts) * share;
+      const gradePounds = pounds * share;
+      const perLb = (value: number) =>
+        gradePounds > 0 ? value / gradePounds : 0;
+      const pricePerLb = perLb(sales.revenue * valueShare);
+      const beefCostPerLb = perLb(sales.beefCost * valueShare);
+      const storeCostPerLb = perLb(sales.storeCost * share);
+      return [
+        key,
+        {
+          pounds: gradePounds,
+          revenue,
+          beefCost,
+          storeCost,
+          profit: revenue - beefCost - storeCost,
+          pricePerLb,
+          beefCostPerLb,
+          storeCostPerLb,
+          profitPerLb: pricePerLb - beefCostPerLb - storeCostPerLb,
+        },
+      ];
+    }),
+  ) as Record<GradeKey, GradeSplit>;
 }
 
 export function validateScenario(input: ScenarioInput) {
@@ -113,6 +195,19 @@ export function validateScenario(input: ScenarioInput) {
     input.customCadence.every((value) => value === 0)
   ) {
     errors.push('At least one custom cadence month must be greater than zero.');
+  }
+  const shares = GRADES.map((key) => input.gradeMix[key]);
+  if (
+    shares.some((share) => !(share >= 0 && share <= 1)) ||
+    Math.abs(shares.reduce((sum, share) => sum + share, 0) - 1) > 0.001
+  ) {
+    errors.push('Grade shares must each be 0-100% and add up to 100%.');
+  }
+  if (
+    !(input.gradePriceIndex.prime > 0 && input.gradePriceIndex.prime <= 5) ||
+    !(input.gradePriceIndex.select > 0 && input.gradePriceIndex.select <= 5)
+  ) {
+    errors.push('Grade price indexes must be between 0 and 5 times Choice.');
   }
   for (const key of PHASES) {
     const phase = input.phases[key];
@@ -225,6 +320,7 @@ function simulateTrial(
   const fedShock = linkedShock(input.marketRisk.fedVolatility);
   const wholesaleShock = linkedShock(input.marketRisk.wholesaleVolatility);
   const retailShock = linkedShock(input.marketRisk.retailVolatility);
+  const gradeIndex = blendedGradeIndex(input);
   const feedShock = deterministic
     ? 1
     : Math.exp(
@@ -237,6 +333,7 @@ function simulateTrial(
   let mortalityHead = 0;
   let endingInventoryHead = 0;
   let retailPounds = 0;
+  const retailSales: RetailSales = { revenue: 0, beefCost: 0, storeCost: 0 };
   let fedLiveCwtSold = 0;
 
   for (let agent = 0; agent < agentCount; agent += 1) {
@@ -320,12 +417,14 @@ function simulateTrial(
                       input.dressingPercentage *
                       input.saleableYield *
                       input.wholesalePricePerLb *
+                      gradeIndex *
                       wholesaleShock +
                     input.byproductCreditPerHead
                   : exitWeight *
                     input.dressingPercentage *
                     input.saleableYield *
                     input.retailPricePerLb *
+                    gradeIndex *
                     retailShock;
         ledger.terminalInventoryValue += terminalValue * weight;
         ledger.endingInventoryHead += weight;
@@ -394,6 +493,7 @@ function simulateTrial(
             input.annualWholesalePriceTrend,
             currentMonth,
           ) *
+          gradeIndex *
           wholesaleShock;
         saleValue = wholesaleValue + input.byproductCreditPerHead;
         nextAcquisitionValue = wholesaleValue;
@@ -407,10 +507,15 @@ function simulateTrial(
             input.annualRetailPriceTrend,
             currentMonth,
           ) *
+          gradeIndex *
           retailShock;
-        const retailCost = pounds * 1.55;
+        const retailCost = pounds * RETAIL_COST_PER_LB;
         ledger.directCosts += retailCost * weight;
         retailPounds += pounds * weight;
+        retailSales.revenue += saleValue * weight;
+        retailSales.beefCost += acquisitionValue * weight;
+        retailSales.storeCost +=
+          (stageDirectCost + retailCost + phase.economicCostPerHead) * weight;
         completedHead += weight;
         isFinished = true;
       }
@@ -462,6 +567,7 @@ function simulateTrial(
     mortalityHead,
     endingInventoryHead,
     retailPounds,
+    retailSales,
     chainEconomicProfit,
     chainOperatingContribution,
     fedLiveCwtSold,
@@ -597,6 +703,51 @@ function aggregate(
     trials.map((trial) => trial.fedLiveCwtSold),
     0.5,
   );
+  const medianSales: RetailSales = {
+    revenue: percentile(
+      trials.map((trial) => trial.retailSales.revenue),
+      0.5,
+    ),
+    beefCost: percentile(
+      trials.map((trial) => trial.retailSales.beefCost),
+      0.5,
+    ),
+    storeCost: percentile(
+      trials.map((trial) => trial.retailSales.storeCost),
+      0.5,
+    ),
+  };
+  const medianGrades = splitRetailByGrade(
+    input,
+    phases.retail,
+    retailPounds,
+    medianSales,
+  );
+  const trialGrades = trials.map((trial) =>
+    splitRetailByGrade(
+      input,
+      trial.phases.retail,
+      trial.retailPounds,
+      trial.retailSales,
+    ),
+  );
+  const retailByGrade = Object.fromEntries(
+    GRADES.map((key) => {
+      const grade = medianGrades[key];
+      const profits = trialGrades.map((split) => split[key].profit);
+      return [
+        key,
+        {
+          key,
+          share: input.gradeMix[key],
+          priceIndex: gradePriceIndex(input, key),
+          ...grade,
+          p10Profit: percentile(profits, 0.1),
+          p90Profit: percentile(profits, 0.9),
+        },
+      ];
+    }),
+  ) as Record<GradeKey, GradeResult>;
   const sensitivity = buildSensitivity(input);
   const sensitivityBase = simulateTrial(
     { ...input, trials: 1 },
@@ -616,15 +767,20 @@ function aggregate(
     mortalityHead,
     endingInventoryHead,
     retailPounds,
+    retailByGrade,
     chainEconomicProfit,
     chainOperatingContribution,
     chainP10: percentile(chainValues, 0.1),
     chainP90: percentile(chainValues, 0.9),
     chainProbabilityOfLoss:
       chainValues.filter((value) => value < 0).length / chainValues.length,
+    // Expressed as the Choice retail price; each pound sells at Choice x the
+    // mix-weighted grade index.
     breakEvenRetailPricePerLb: Math.max(
       0,
-      input.retailPricePerLb - chainEconomicProfit / Math.max(retailPounds, 1),
+      input.retailPricePerLb -
+        chainEconomicProfit /
+          Math.max(retailPounds * blendedGradeIndex(input), 1),
     ),
     breakEvenFedPricePerCwt: Math.max(
       0,

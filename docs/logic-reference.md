@@ -56,11 +56,13 @@ This generated file holds all the reference data the app uses. Nobody should edi
 - `generatedAt`: the date the file was produced.
 - `availableYears`: the list of years with complete data (currently 2015 through 2025).
 - `latestYear`: the most recent year (2025). It becomes the app's default year.
-- `methodology`: five short text explanations of how each derived value was calculated (annual prices, feed cost, phase costs, byproduct credit, dressing percentage).
-- `sources`: the four USDA sources, each with a label, organization, landing page, and the exact download URL used.
+- `methodology`: short text explanations of how each derived value was calculated (annual prices, feed cost, phase costs, byproduct credit, dressing percentage, retail price, grade mix, grade price index).
+- `sources`: the six USDA sources (four ERS files, the AMS grading archive, and the AMS LMR API), each with a label, organization, landing page, and the exact download URL used.
 - `years`: one profile per year. Each profile contains:
   - Five prices: calf, feeder, and fed cattle in $/cwt, plus wholesale and retail beef in $/lb.
   - Feed cost ($/ton), byproduct credit ($/head), and dressing percentage.
+  - `gradeMix`: the share of steer and heifer beef grading Prime, Choice, and Select (sums to 1), and `gradeMixYear`, the year those shares come from.
+  - `gradePriceIndex`: the Prime and Select price as a multiple of the Choice price.
   - For each of the five stages, a direct cost, a daily cost, and an overhead (economic) cost.
   - A `sourceMetrics` block with the raw USDA numbers the derived values came from: corn price, cow-calf operating and overhead cost per cow, and the Choice beef byproduct and wholesale values.
 
@@ -111,11 +113,13 @@ This Node.js script builds the JSON file above. It runs with `npm run data:refre
 **`fileFromZip(files, filename)`** (line 205) finds a file with the given name inside the unzipped livestock archive, and throws if it isn't there.
 
 **`main()`** (line 214) runs the whole pipeline:
-1. It discovers and downloads all four datasets in parallel.
-2. It unzips the livestock archive and parses `LivestockPrices.csv`, `MeatStats.csv`, the price spreads file, the cow-calf file, and the feed grains file.
+1. It discovers and downloads all five files in parallel.
+2. It unzips the livestock archive and parses `LivestockPrices.csv`, `Meat-Statistics.csv` (ERS's newer name for `MeatStats.csv`; either is accepted), the price spreads file, the cow-calf file, the feed grains file, and the grading archive.
 3. **It picks the reference year** (`latestCandidate`): the latest year that has a "U.S. total" row in the cow-calf file. It reads that year's operating cost, overhead, corn price, and byproduct value. These become the denominators of every index. If any are missing, the script stops with an error.
 4. **For each year from 2015 to the reference year:**
-   - **Prices.** Calf, feeder, and fed prices are yearly averages of monthly observations. The fed price accepts 11 months instead of 12, because USDA's January 2022 value is missing. Retail and wholesale beef come from the price spreads file in cents per pound, and the script divides them by 100.
+   - **Prices.** Calf, feeder, and fed prices are yearly averages of monthly observations. The fed price accepts 11 months instead of 12, because USDA's January 2022 value is missing. Retail and wholesale beef come from the price spreads file in cents per pound ("Choice beef retail value" and "Choice beef wholesale value"), and the script divides them by 100. Both are Choice, so retail sells the same grade it buys.
+   - **Grade mix** (`annualGradeMix`) averages the weekly national Prime, Choice, Select, and Other percentages from the AMS steer and heifer grading archive (`NW_LS903.TXT`, discovered on its ESMIS page). "Other" (Standard and ungraded) is folded into Select. AMS stopped the weekly report after December 2024, so later years reuse the most recent complete year and record it in `gradeMixYear`.
+   - **Grade price indexes** (`annualLmrIndexes`) come from the AMS Livestock Mandatory Reporting API (no key needed). Select is the year's average Select cutout ÷ average Choice cutout (report 2461, LM_XB459). Prime compares each Prime cut's yearly average price (report 2460, LM_XB456) with the same cut in the Choice cuts section, matched by IMPS code, weighted by Choice pounds. The matched cuts are mostly rib and loin items, so the Prime index probably runs high relative to a whole-carcass premium. USDA publishes no Prime or Select retail price, so the same indexes are applied at retail.
    - **Dressing percentage** is average federally inspected dressed weight divided by average live weight.
    - **Feed cost** is $230 × (this year's corn price ÷ the reference year's corn price).
    - **Byproduct credit** is $165 × (this year's byproduct value ÷ the reference year's byproduct value).
@@ -142,11 +146,13 @@ This file defines the shape of everything the model reads and produces. It has n
   - Uncertainty: P10 and P90 profit, and probability of loss.
   - Average exit weight.
 - **`MonthlyResult`** holds one month's profit for each stage and for the whole chain.
+- **`GradeKey`**, **`GradeMix`**, and **`GradePriceIndex`** describe the Prime/Choice/Select split. **`GradeResult`** is one grade's retail economics: share, price index, pounds, revenue, beef cost, store cost, and profit (totals that include beef still on hand), plus per-pound price, beef cost, store cost, and profit for beef actually sold, and P10/P90 profit.
 - **`SensitivityResult`** records how chain profit changes when one input moves down or up 10%: the low result, the high result, and the swing.
 - **`SimulationSummary`** is the complete output of a simulation:
   - The scenario that produced it and a data-vintage label.
   - All five `PhaseResult`s, the monthly series, the sensitivity list, and the sensitivity base case.
   - Chain-level totals: started, completed, died, and still-in-progress head; retail pounds; total and cash profit; P10 and P90; probability of loss.
+  - `retailByGrade`: the retail stage split into Prime, Choice, and Select.
   - Two break-even prices, a reconciliation check, and the runtime in milliseconds.
 - **`SimulationProgress`** reports how many trials have finished out of the total.
 
@@ -179,8 +185,8 @@ This file builds the default scenario.
 
 - **`SOURCE_NOTES`** lists the five sources shown in the simulator's "Data sources" section: the four USDA ERS datasets plus the NASS cattle inventory survey.
 - **`DATA_VINTAGE`** is the vintage label for the latest year. It's exported but unused.
-- **`BASE_SCENARIO`** holds every default that doesn't come from USDA: 100,000 head, a 24-month period, even entry, seed 2025, 250 runs, 7% animal variation, an 85 lb start weight, 67% saleable yield, 28 lb/day feed intake, 0% trends, each stage's biology (days, gain, mortality), and the risk settings. It also contains price literals, such as a retail price of $8.17, but these are placeholders that get overwritten.
-- **`DEFAULT_SCENARIO`** is `BASE_SCENARIO` with the latest USDA year applied by `applyHistoricalYear`. The effective default prices are therefore the 2025 USDA values (for example, retail $8.842/lb and calf $408.40/cwt), not the placeholders.
+- **`BASE_SCENARIO`** holds every default that doesn't come from USDA: 100,000 head, a 24-month period, even entry, seed 2025, 250 runs, 7% animal variation, an 85 lb start weight, 67% saleable yield, 28 lb/day feed intake, 0% trends, each stage's biology (days, gain, mortality), and the risk settings. It also contains price and grade literals, such as a retail price of $9.38, but these are placeholders that get overwritten.
+- **`DEFAULT_SCENARIO`** is `BASE_SCENARIO` with the latest USDA year applied by `applyHistoricalYear`. The effective default prices are therefore the 2025 USDA values (for example, Choice retail $9.38/lb and calf $408.40/cwt), not the placeholders.
 - **`cloneDefaultScenario()`** (line 125) returns a fresh deep copy of the default scenario. The Reset button and the first run on page load use it.
 
 ### `lib/model/simulate.ts`
@@ -265,7 +271,8 @@ The result always adds up exactly to the requested head count. Because the patte
      - **Stocker:** exit weight ÷ 100 × trended, shocked feeder price. The feedlot pays this.
      - **Feedlot:** exit weight ÷ 100 × trended, shocked fed price. The packer pays this. The model also keeps a running total of fed cattle weight sold (in hundredweight), which the break-even calculation needs.
      - **Packer:** retail pounds (exit weight × dressing percentage × saleable yield) × trended, shocked wholesale price, plus the byproduct credit. The retailer pays only the wholesale portion, because the byproducts are sold elsewhere.
-     - **Retail:** the same retail pounds × trended, shocked retail price. The retailer also pays a fixed handling cost of $1.55 per retail pound, which is hard-coded, added to its direct costs. The animal counts as finished and its pounds are added to the chain's retail pounds.
+     - **Retail:** the same retail pounds × trended, shocked retail price. The retailer also pays a fixed handling cost of $1.55 per retail pound (`RETAIL_COST_PER_LB`), added to its direct costs. The animal counts as finished and its pounds are added to the chain's retail pounds. The trial also records the revenue, beef cost, and store cost of beef actually sold (`retailSales`), which the grade breakdown uses for per-pound figures.
+     - **Grade mix.** The wholesale and retail prices (including ending inventory valuations) are multiplied by `blendedGradeIndex` = Σ grade share × grade price index, with Choice = 1. The input prices are therefore Choice prices, and the mix and indexes lift or lower the average price per pound.
    - **Monthly table.** The sale value is added to the monthly table in the month the sale happened.
 4. **Stage totals.** After all agents finish, each stage's totals are calculated:
    - Cash profit (`operatingContribution`) = sales revenue + ending inventory value − acquisition cost − direct costs.
@@ -291,8 +298,9 @@ The result always adds up exactly to the requested head count. Because the patte
   - P10, P90, and probability of loss come from each trial's own chain profit.
   - Finished head, deaths, and retail pounds are medians across trials.
   - Ending inventory head is **calculated** as head count − finished − deaths, so the reconciliation difference is always zero by construction.
+- **Retail by grade** (`splitRetailByGrade`). Each grade gets a share of the retail stage's sales and beef purchases in proportion to share × price index, and a share of store costs in proportion to its share of pounds, so the three rows sum exactly to the retail stage totals. Per-pound figures divide the same split of `retailSales` by the grade's pounds. P10 and P90 come from splitting each trial the same way.
 - **Break-even prices:**
-  - The **break-even beef price** is retail price − chain profit ÷ retail pounds, floored at zero. It's the retail price at which chain profit would be zero.
+  - The **break-even beef price** is retail price − chain profit ÷ (retail pounds × blended grade index), floored at zero. It's the Choice retail price at which chain profit would be zero, with Prime and Select moving with it.
   - The **break-even cattle price** is fed price − feedlot profit ÷ fed cattle hundredweight sold, floored at zero. It's the fed price at which feedlot profit would be zero.
 - **Sensitivity.** It calls `buildSensitivity` and runs one deterministic trial to get `sensitivityBase`.
 - It records the scenario, the data vintage label, and the runtime.
@@ -721,6 +729,7 @@ This is the "Follow the money" section of the Stage details tab, for the stage c
 - **The profit bridge** shows, per head, money in, then cattle purchased, operating expenses, and overhead, ending with total profit.
 - **The expense mix** shows each cost as a share of total costs.
 - **Cost pressure** shows profit per head if direct and overhead costs all change by −20%, −10%, 0%, +10%, or +20%. It's calculated in the component as `profit − (direct + overhead) × change`, with revenue and purchase price held constant.
+- When Retail is selected, it also renders **`GradeBreakdown`** (`grade-breakdown.tsx`): bars comparing each grade's share of beef sold with its share of retail profit (the profit bar is hidden if any grade loses money), and a table of per-pound sale price, beef cost, store cost, and profit plus total profit per grade. A note says whether the shares are USDA's (and which year) or the user's, and that Prime and Select prices are estimates.
 
 ### `components/simulator/results/range-bar.tsx`
 
@@ -837,12 +846,12 @@ Each price is multiplied at the moment of sale by its trend (section 4.5) and it
 - **Fed cattle** ($/cwt, `fedPricePerCwt`). 2025 default: $224.05.
   - It's the price at which the feedlot sells and the packer buys.
   - It's also the starting point for the break-even cattle price.
-- **Wholesale beef** ($/lb, `wholesalePricePerLb`). 2025 default: $5.455. Step 0.01.
-  - It's the price at which the packer sells beef and the retailer buys it.
+- **Wholesale beef (Choice)** ($/lb, `wholesalePricePerLb`). 2025 default: $5.455. Step 0.01.
+  - It's the Choice price at which the packer sells beef and the retailer buys it. Prime and Select sell at this price × their grade index.
   - Value = retail pounds × price, where retail pounds = live weight × dressing yield × saleable yield.
   - Because the packer's gain is exactly the retailer's cost, this price has no effect on chain profit. It only moves profit between the packer and the retailer.
-- **Retail beef** ($/lb, `retailPricePerLb`). 2025 default: $8.842. Step 0.01.
-  - It's the final consumer price the retailer receives.
+- **Retail beef (Choice)** ($/lb, `retailPricePerLb`). 2025 default: $9.38. Step 0.01.
+  - It's the Choice consumer price the retailer receives. Prime and Select sell at this price × their grade index.
   - It's the most influential input on chain profit and the starting point for the break-even beef price.
 - **Feed** ($/ton, `feedCostPerTon`). 2025 default: $230.
   - It's the feedlot ration price and the only feed cost in the model.
@@ -850,6 +859,10 @@ Each price is multiplied at the moment of sale by its trend (section 4.5) and it
 - **Byproduct** ($/head, `byproductCreditPerHead`). 2025 default: $165.
   - It's extra revenue the packer earns per animal from hides, offal, and other byproducts.
   - It has no trend and no random shock, and the retailer doesn't pay for it.
+- **Carcass grade mix** (USDA-owned, editable).
+  - **Prime share** and **Select share** (`gradeMix`). 2025 defaults: 10.5% and 16.8% (2024 grading, the latest USDA published). Choice is whatever is left, shown under the fields.
+  - **Prime vs Choice** and **Select below Choice** (`gradePriceIndex`), shown as percentages. 2025 defaults: +21.9% and 4.6%. They apply at both wholesale and retail.
+  - Changing the reference year replaces all four with that year's USDA values.
 
 ## 4.4 Herd & costs section
 

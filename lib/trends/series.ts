@@ -48,14 +48,14 @@ export const SERIES: Record<SeriesKey, Series> = {
   },
   wholesalePricePerLb: {
     stage: 'Packer',
-    product: 'Wholesale beef',
+    product: 'Wholesale beef (Choice)',
     unit: '$/lb',
     decimals: 3,
     color: '#ad9656',
   },
   retailPricePerLb: {
     stage: 'Retail',
-    product: 'Retail beef',
+    product: 'Retail beef (Choice)',
     unit: '$/lb',
     decimals: 2,
     color: '#8f7157',

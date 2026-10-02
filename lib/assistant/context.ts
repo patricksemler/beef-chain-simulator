@@ -79,7 +79,8 @@ export function describeScenario(scenario: ScenarioInput) {
     `- When calves enter: ${cadence}`,
     '- Prices:',
     `  - Weaned calf ${perCwt(scenario.calfPricePerCwt)}; Feeder cattle ${perCwt(scenario.feederPricePerCwt)}; Fed cattle ${perCwt(scenario.fedPricePerCwt)}`,
-    `  - Wholesale beef ${perLb(scenario.wholesalePricePerLb)}; Retail beef ${perLb(scenario.retailPricePerLb)}`,
+    `  - Wholesale beef (Choice) ${perLb(scenario.wholesalePricePerLb)}; Retail beef (Choice) ${perLb(scenario.retailPricePerLb)}`,
+    `  - Carcass grade mix: Prime ${pct(scenario.gradeMix.prime)}, Choice ${pct(scenario.gradeMix.choice)}, Select ${pct(scenario.gradeMix.select)}; Prime sells at ${scenario.gradePriceIndex.prime.toFixed(3)}x and Select at ${scenario.gradePriceIndex.select.toFixed(3)}x the Choice price (wholesale and retail)`,
     `  - Feed $${scenario.feedCostPerTon.toFixed(2)}/ton; Byproduct ${perHead(scenario.byproductCreditPerHead)}`,
     '- Herd & costs:',
     `  - Start weight ${scenario.startWeight} lb; Animal variation ${pct(scenario.biologicalVariation)}`,
@@ -109,6 +110,10 @@ const INPUT_LABELS: Array<[string, (scenario: ScenarioInput) => string]> = [
   ['Fed cattle price', (s) => perCwt(s.fedPricePerCwt)],
   ['Wholesale beef price', (s) => perLb(s.wholesalePricePerLb)],
   ['Retail beef price', (s) => perLb(s.retailPricePerLb)],
+  ['Prime share', (s) => pct(s.gradeMix.prime)],
+  ['Select share', (s) => pct(s.gradeMix.select)],
+  ['Prime price vs Choice', (s) => `${s.gradePriceIndex.prime.toFixed(3)}x`],
+  ['Select price vs Choice', (s) => `${s.gradePriceIndex.select.toFixed(3)}x`],
   ['Feed cost', (s) => `$${s.feedCostPerTon.toFixed(2)}/ton`],
   ['Byproduct credit', (s) => perHead(s.byproductCreditPerHead)],
   ['Dressing yield', (s) => pct(s.dressingPercentage)],
@@ -198,6 +203,13 @@ export function describeResults(result: SimulationSummary) {
       (driver) =>
         `  - ${driver.label}: 10% lower → ${currency(driver.lowEconomicProfit)}; 10% higher → ${currency(driver.highEconomicProfit)}; bar label ±${money(driver.swing)}`,
     );
+  // Snapshots from a page loaded before grades existed have no grade split.
+  const gradeRows = (
+    result.retailByGrade ? (['prime', 'choice', 'select'] as const) : []
+  ).map((key) => {
+    const grade = result.retailByGrade[key];
+    return `    - ${key[0].toUpperCase()}${key.slice(1)}: ${pct(grade.share)} of beef; per pound sold: sells for $${grade.pricePerLb.toFixed(2)}, beef cost $${grade.beefCostPerLb.toFixed(2)}, store cost $${grade.storeCostPerLb.toFixed(2)}, profit $${grade.profitPerLb.toFixed(2)}; total profit ${currency(grade.profit)} (P10 ${currency(grade.p10Profit)} to P90 ${currency(grade.p90Profit)})`;
+  });
   const retailCushion =
     (result.scenario.retailPricePerLb - result.breakEvenRetailPricePerLb) /
     Math.max(result.scenario.retailPricePerLb, 0.01);
@@ -219,7 +231,7 @@ export function describeResults(result: SimulationSummary) {
     `"Profit" tab, "What moves profit most" card (change in total profit when one input moves 10%, from a base case of ${currency(result.sensitivityBase)} run without random price swings):`,
     ...sensitivityRows,
     'Break-even prices (computed by the model, not shown on screen):',
-    `  - Retail beef price: today $${result.scenario.retailPricePerLb.toFixed(2)}/lb vs break-even $${result.breakEvenRetailPricePerLb.toFixed(2)}/lb (retail price where total chain profit is zero); ${retailCushion >= 0 ? `${pct(retailCushion)} cushion` : `needs +${pct(-retailCushion)}`}`,
+    `  - Retail beef price (Choice): today $${result.scenario.retailPricePerLb.toFixed(2)}/lb vs break-even $${result.breakEvenRetailPricePerLb.toFixed(2)}/lb (Choice retail price where total chain profit is zero, with Prime and Select moving with it); ${retailCushion >= 0 ? `${pct(retailCushion)} cushion` : `needs +${pct(-retailCushion)}`}`,
     `  - Fed cattle price: today ${perCwt(result.scenario.fedPricePerCwt)} vs break-even ${perCwt(result.breakEvenFedPricePerCwt)} (fed price where feedlot profit is zero); ${fedGap <= 0 ? `${pct(-fedGap)} cushion` : `needs +${pct(fedGap)}`}`,
     '',
     '"Cattle flow" tab:',
@@ -233,6 +245,8 @@ export function describeResults(result: SimulationSummary) {
     '',
     '"Stage details" tab (the user picks one stage; the panel shows its profit, per-animal profit, margin, chance of a loss, range of outcomes, a profit bridge, cost mix, and a cost-pressure chart, then a table of all stages):',
     ...stageRows,
+    '  - "Where retail profit comes from" card (shown when Retail is picked; Prime and Select retail prices are estimates, since USDA publishes retail prices for Choice only):',
+    ...gradeRows,
   ].join('\n');
 }
 

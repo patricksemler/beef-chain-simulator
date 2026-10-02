@@ -54,6 +54,8 @@ export function applyHistoricalYear(
   next.feedCostPerTon = profile.feedCostPerTon;
   next.byproductCreditPerHead = profile.byproductCreditPerHead;
   next.dressingPercentage = profile.dressingPercentage;
+  next.gradeMix = { ...profile.gradeMix };
+  next.gradePriceIndex = { ...profile.gradePriceIndex };
   for (const phase of PHASE_KEYS) {
     next.phases[phase] = { ...next.phases[phase], ...profile.phases[phase] };
   }

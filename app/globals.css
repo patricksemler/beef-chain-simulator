@@ -2337,9 +2337,91 @@
   color: var(--muted-foreground);
 }
 
+/* Retail-only panel: grade shares of beef and profit, then per-grade
+   economics per pound. Table selectors outrank the generic `.panel table`
+   cell padding so the seven columns fit the results column. */
+.grade-breakdown {
+  margin-top: 1rem;
+}
+
+.grade-share-bars {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.grade-share-row .expense-mix-bar {
+  margin-top: 0.45rem;
+}
+
+.grade-table-wrap {
+  margin-top: 1.25rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.grade-breakdown table.grade-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.grade-breakdown table.grade-table th,
+.grade-breakdown table.grade-table td {
+  padding: 0.6rem 0.75rem;
+  border-top: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.grade-breakdown table.grade-table thead th {
+  border-top: 0;
+  white-space: normal;
+  background: var(--soft-bg);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.grade-breakdown table.grade-table th[scope='row'],
+.grade-breakdown table.grade-table thead th:first-child {
+  text-align: left;
+}
+
+.grade-breakdown table.grade-table th[scope='row'] {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.grade-breakdown table.grade-table tfoot th,
+.grade-breakdown table.grade-table tfoot td {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.grade-breakdown table.grade-table .negative {
+  color: var(--negative);
+}
+
+.grade-swatch {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.45rem;
+  border-radius: 999px;
+  vertical-align: 0.05rem;
+}
+
 @media (max-width: 880px) {
   .stage-visual-grid {
     grid-template-columns: 1fr;
+  }
+
+  .grade-breakdown table.grade-table th,
+  .grade-breakdown table.grade-table td {
+    padding: 0.55rem 0.5rem;
   }
 }
 

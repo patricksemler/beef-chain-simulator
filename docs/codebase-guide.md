@@ -74,12 +74,14 @@ Only the files with real logic are listed. `components/ui/*` is stock shadcn/Bas
 This is a standalone Node script, so it never runs in the app. The steps:
 
 1. **Discover the download links.** `discoverDownload()` fetches each USDA ERS landing page in `SOURCES` and regex-matches the current download link, because USDA changes the `?v=` query strings.
-2. **Download and parse** four sources: the livestock ZIP (`LivestockPrices.csv`, `MeatStats.csv`, unzipped with `fflate`), meat price spreads, cow-calf costs and returns, and feed grains.
+2. **Download and parse** five files: the livestock ZIP (`LivestockPrices.csv` and `Meat-Statistics.csv`, formerly `MeatStats.csv`, unzipped with `fflate`), meat price spreads, cow-calf costs and returns, feed grains, and the AMS grading archive. Grade price indexes come from the AMS LMR API, queried once per year.
 3. **Pick a reference year.** `latestCandidate` is the latest year that has a "U.S. total" row in the cow-calf file. That year's operating cost, overhead, corn price, and byproduct value become the index denominators.
 4. **Build each year (2015 → latest):**
    - **Observed prices** come from `annualMonthlyMean()`, which averages the 12 monthly values. The fed-steer series only needs 11 months because ERS is missing January 2022.
      - Calf = "Steers 500–550 lb", feeder = "Steers 750–800 lb", fed = "Steers 65–80% Choice" (all $/cwt).
-     - Wholesale = "Choice beef wholesale value", retail = "All fresh beef retail value". Both are ¢/lb, divided by 100.
+     - Wholesale = "Choice beef wholesale value", retail = "Choice beef retail value". Both are ¢/lb, divided by 100.
+     - Grade mix = yearly average of the weekly AMS steer and heifer grading shares (ESMIS `NW_LS903.TXT`), with "Other" folded into Select. The report ended in Dec 2024, so 2025 reuses 2024 (`gradeMixYear`).
+     - Grade price indexes = AMS LMR API: Select cutout ÷ Choice cutout (report 2461), and Prime cut prices ÷ the same Choice cuts (reports 2460/2461, matched by IMPS code, weighted by Choice pounds).
      - Dressing % = FI dressed weight ÷ FI live weight.
    - **Indexed assumptions** scale the hard-coded `BASE_2025` values by a USDA ratio:
      - `feedCostPerTon = 230 × (corn_year / corn_ref)`
