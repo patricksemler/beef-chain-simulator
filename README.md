@@ -33,6 +33,10 @@ The optional BYOK dashboard assistant uses a separate Cloudflare Worker. See
 [`docs/assistant.md`](docs/assistant.md) for local setup, privacy guarantees,
 provider configuration, and the preview/production deployment sequence.
 
+## Code documentation
+
+Every backend file (`lib/model/*`, `lib/assistant/*`, `lib/trends/series.ts`, `lib/data/historical-scenarios.json`, `workers/*`, `scripts/**`, `migrations/*`) has a sibling `.md` spec with the same base name, for example `lib/model/simulate.ts` → `lib/model/simulate.md`. Each spec covers the file's purpose, how it fits into the codebase, its API, its invariants, and how to test it.
+
 ## Refreshing historical data
 
 Historical ingestion is a standalone build step:
