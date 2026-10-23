@@ -428,7 +428,13 @@ function simulateTrial(
       ledger.economicCosts +=
         phase.economicCostPerHead * completionRatio * weight;
 
-      const completedPhase = completionRatio >= 0.999999;
+      // A stage that ends on the horizon leaves no time to enter the next one,
+      // so the animal stays in this stage as ending inventory. Retail is the
+      // last stage, so finishing it on the horizon is still a completed sale.
+      const endsAtHorizon =
+        key !== 'retail' &&
+        currentMonth + durationMonths >= input.horizonMonths;
+      const completedPhase = completionRatio >= 0.999999 && !endsAtHorizon;
       if (!completedPhase) {
         const terminalValue =
           key === 'cowCalf'

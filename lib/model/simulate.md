@@ -47,7 +47,7 @@ Internal: `mulberry32`, `normal` (Box–Muller), `percentile` (linear interpolat
 - Overhead: × ratio.
 
 Then:
-- **Not finished** (`ratio < 0.999999`): the animal becomes ending inventory, valued at the stage's **untrended** shocked price. Packer value includes the byproduct credit.
+- **Not finished** (`ratio < 0.999999`), or a non-retail stage that ends exactly on the horizon: the animal becomes ending inventory, valued at the stage's **untrended** shocked price. Packer value includes the byproduct credit. Retail finishing on the horizon is a completed sale.
 - **Finished:** mortality is drawn **after** costs. If the animal survives, it's sold at the trended, shocked price.
 - **Packer** sells `lbs × wholesale × gradeIndex + byproduct`. Retail pays only the wholesale part.
 - **Retail** sells `lbs × retail × gradeIndex` and adds `RETAIL_COST_PER_LB` ($1.55) × lbs to direct costs.
