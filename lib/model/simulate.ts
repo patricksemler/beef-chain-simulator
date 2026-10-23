@@ -30,6 +30,7 @@
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
 import { historicalDataVintage, isHistoricalYear } from './historical';
+import { PHASE_ORDER } from './phases';
 import type {
   EntryCadence,
   GradeKey,
@@ -43,13 +44,6 @@ import type {
   SimulationSummary,
 } from './types';
 
-const PHASES: PhaseKey[] = [
-  'cowCalf',
-  'stocker',
-  'feedlot',
-  'packer',
-  'retail',
-];
 const MONTH_DAYS = 30.4375;
 const GRADES: GradeKey[] = ['prime', 'choice', 'select'];
 /** Retail store operating cost per pound of saleable beef. */
@@ -240,7 +234,7 @@ export function validateScenario(input: ScenarioInput) {
   ) {
     errors.push('Grade price indexes must be between 0 and 5 times Choice.');
   }
-  for (const key of PHASES) {
+  for (const key of PHASE_ORDER) {
     const phase = input.phases[key];
     if (phase.durationDays < 0 || phase.averageDailyGain < 0)
       errors.push(`${phase.label} timing values cannot be negative.`);
@@ -325,7 +319,7 @@ function simulateTrial(
     entryCumulative.push(running);
   }
   const phases = Object.fromEntries(
-    PHASES.map((key) => [key, emptyLedger(key, input.phases[key].label)]),
+    PHASE_ORDER.map((key) => [key, emptyLedger(key, input.phases[key].label)]),
   ) as Record<PhaseKey, Ledger>;
   const monthly = Array.from({ length: input.horizonMonths }, (_, index) => ({
     month: index + 1,
@@ -387,7 +381,7 @@ function simulateTrial(
     let isFinished = false;
     let isDead = false;
 
-    for (const key of PHASES) {
+    for (const key of PHASE_ORDER) {
       const phase = input.phases[key];
       const ledger = phases[key];
       if (currentMonth >= input.horizonMonths || isDead || isFinished) break;
@@ -558,7 +552,7 @@ function simulateTrial(
     }
   }
 
-  for (const key of PHASES) {
+  for (const key of PHASE_ORDER) {
     const ledger = phases[key];
     ledger.operatingContribution =
       ledger.revenue +
@@ -570,15 +564,15 @@ function simulateTrial(
       ledger.exitedHead > 0 ? ledger.averageExitWeight / ledger.exitedHead : 0;
   }
 
-  const chainEconomicProfit = PHASES.reduce(
+  const chainEconomicProfit = PHASE_ORDER.reduce(
     (sum, key) => sum + phases[key].economicProfit,
     0,
   );
-  const chainOperatingContribution = PHASES.reduce(
+  const chainOperatingContribution = PHASE_ORDER.reduce(
     (sum, key) => sum + phases[key].operatingContribution,
     0,
   );
-  for (const key of PHASES) {
+  for (const key of PHASE_ORDER) {
     const activity = monthly.reduce((sum, month) => sum + month[key], 0);
     if (activity > 0) {
       for (const month of monthly)
@@ -588,7 +582,7 @@ function simulateTrial(
     }
   }
   for (const month of monthly) {
-    month.chain = PHASES.reduce((sum, key) => sum + month[key], 0);
+    month.chain = PHASE_ORDER.reduce((sum, key) => sum + month[key], 0);
   }
 
   return {
@@ -612,7 +606,7 @@ function aggregate(
 ): SimulationSummary {
   const medianTrial = trials[Math.floor(trials.length / 2)];
   const phases = {} as Record<PhaseKey, PhaseResult>;
-  for (const key of PHASES) {
+  for (const key of PHASE_ORDER) {
     const economicProfits = trials.map(
       (trial) => trial.phases[key].economicProfit,
     );
@@ -696,21 +690,21 @@ function aggregate(
       retail: 0,
       chain: 0,
     };
-    for (const key of PHASES)
+    for (const key of PHASE_ORDER)
       row[key] = percentile(
         trials.map((trial) => trial.monthly[month][key]),
         0.5,
       );
-    row.chain = PHASES.reduce((sum, key) => sum + row[key], 0);
+    row.chain = PHASE_ORDER.reduce((sum, key) => sum + row[key], 0);
     return row;
   });
 
   const chainValues = trials.map((trial) => trial.chainEconomicProfit);
-  const chainEconomicProfit = PHASES.reduce(
+  const chainEconomicProfit = PHASE_ORDER.reduce(
     (sum, key) => sum + phases[key].economicProfit,
     0,
   );
-  const chainOperatingContribution = PHASES.reduce(
+  const chainOperatingContribution = PHASE_ORDER.reduce(
     (sum, key) => sum + phases[key].operatingContribution,
     0,
   );

@@ -25,6 +25,7 @@ SimulatorPage ─ useSimulation() ─postMessage({requestId, scenario})─► wo
 - **Imports:**
   - the worker via Vite's `?worker` loader
   - `defaults.ts`, `historical.ts`, `types.ts`
+  - `hasStaleDisplayedResult` from [`lib/dashboard.ts`](../dashboard.md)
   - the WebMCP types from `types/webmcp.d.ts`
 - **Imported by:** `components/simulator/simulator-page.tsx` only.
 
@@ -36,7 +37,7 @@ SimulatorPage ─ useSimulation() ─postMessage({requestId, scenario})─► wo
 | `result` | The last **completed** summary for the latest request. |
 | `isRunning` | Starts `true`, because a default run is started on mount. |
 | `error` | The last error message (the validation text from the engine). |
-| `isStale` | `result && !isRunning && JSON.stringify(scenario) !== JSON.stringify(result.scenario)`. It drives the Run button's `data-stale` attribute. |
+| `isStale` | `!isRunning && hasStaleDisplayedResult(scenario, result)` (from [`lib/dashboard.ts`](../dashboard.md)). It drives the Run button's `data-stale` attribute. |
 | `runScenario(next)` | Bumps `requestRef`, sets the draft, posts to the worker, and returns a Promise of the summary. It rejects immediately if the worker isn't created yet. |
 | `restoreDefaults()` | Runs `cloneDefaultScenario()` (the Reset button). |
 
@@ -59,7 +60,7 @@ How to verify manually:
 1. Run `npm run dev` (or the `beef-chain-dev` launch config) and open `/simulator`.
 2. Check that results appear after load and that edits turn on the Run button's stale styling.
 3. Click Run twice quickly and confirm the final result matches the final inputs.
-4. Pick "1,000" runs and confirm the validation error shows.
+4. Choose "Custom weights", set every month to 0, click Run, and confirm the validation error shows.
 5. Click Reset.
 
 What to test if you add coverage:
@@ -69,4 +70,3 @@ What to test if you add coverage:
 ## Gotchas
 
 - `isStale` compares JSON strings, so a change in key order counts as stale. `structuredClone` preserves key order, so this hasn't been a problem in practice.
-- The stale check in [`lib/assistant/context.ts`](../assistant/context.ts) (`hasStaleDisplayedResult`) duplicates this logic. Keep the two in sync.

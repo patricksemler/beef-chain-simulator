@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { PHASE_META, PHASE_ORDER } from '@/components/simulator/results/phases';
+import { PHASE_META, PHASE_ORDER } from '@/lib/model/phases';
 import {
   RangeBar,
   RangeScale,

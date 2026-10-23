@@ -1,55 +1,14 @@
 import { compactCurrency, currency, percent, whole } from '@/lib/model/format';
 import type { ScenarioInput, SimulationSummary } from '@/lib/model/types';
+import {
+  CADENCE_LABELS,
+  horizonLabel,
+  MONTH_LABELS,
+  RESULT_PAGE_LABELS,
+  SCENARIO_SECTION_LABELS,
+} from '@/lib/dashboard';
 import { PHASES } from './metrics';
-import type { DashboardSnapshot, ResultsPage, ScenarioSection } from './types';
-
-export const RESULT_PAGE_LABELS: Record<ResultsPage, string> = {
-  profit: 'Profit',
-  flow: 'Cattle flow',
-  details: 'Stage details',
-};
-
-export const SCENARIO_SECTION_LABELS: Record<ScenarioSection, string> = {
-  prices: 'Prices',
-  biology: 'Herd & costs',
-  yield: 'Yields & trends',
-  risk: 'Price swings',
-  run: 'Simulation settings',
-  sources: 'Data sources',
-};
-
-const CADENCE_LABELS: Record<ScenarioInput['cadence'], string> = {
-  even: 'Even monthly',
-  upfront: 'All upfront',
-  spring: 'Spring weighted',
-  fall: 'Fall weighted',
-  custom: 'Custom weights',
-};
-
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-export function hasStaleDisplayedResult(
-  draftScenario: ScenarioInput,
-  displayedResult: SimulationSummary | null,
-) {
-  return (
-    displayedResult !== null &&
-    JSON.stringify(draftScenario) !== JSON.stringify(displayedResult.scenario)
-  );
-}
+import type { DashboardSnapshot } from './types';
 
 const money = (value: number) =>
   `${compactCurrency(value)} (${currency(value)})`;
@@ -57,8 +16,6 @@ const pct = (fraction: number) => percent(fraction);
 const perCwt = (value: number) => `$${value.toFixed(2)}/cwt`;
 const perLb = (value: number) => `$${value.toFixed(3)}/lb`;
 const perHead = (value: number) => `$${value.toFixed(2)}/head`;
-const horizonLabel = (months: number) =>
-  months === 12 ? '1 year' : `${months / 12} years`;
 
 /** Every scenario input as the Scenario panel labels it. */
 export function describeScenario(scenario: ScenarioInput) {
@@ -69,7 +26,7 @@ export function describeScenario(scenario: ScenarioInput) {
   const cadence =
     scenario.cadence === 'custom'
       ? `Custom weights (${scenario.customCadence
-          .map((weight, index) => `${MONTHS[index]} ${weight}`)
+          .map((weight, index) => `${MONTH_LABELS[index]} ${weight}`)
           .join(', ')})`
       : CADENCE_LABELS[scenario.cadence];
   const risk = scenario.marketRisk;

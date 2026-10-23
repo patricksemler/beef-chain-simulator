@@ -36,7 +36,7 @@ import { lazy, Suspense, useCallback, useState } from 'react';
 import { Home, LineChart } from 'lucide-react';
 import { ResultsDashboard } from '@/components/simulator/results';
 import { ScenarioPanel } from '@/components/simulator/scenario-panel';
-import { hasStaleDisplayedResult } from '@/lib/assistant/context';
+import { hasStaleDisplayedResult } from '@/lib/dashboard';
 import type {
   DashboardSnapshot,
   ResultsPage,

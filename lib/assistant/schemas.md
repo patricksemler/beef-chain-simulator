@@ -23,7 +23,7 @@ Related limits enforced in the Worker rather than here: a 512 KB body and 8,000 
 ## Where it fits
 
 - Used by [`workers/assistant-api.ts`](../../workers/assistant-api.md) and `tests/assistant.test.ts`.
-- Mirrors [`types.ts`](types.md). The schema enums duplicate the `ResultsPage` and `ScenarioSection` unions and must be kept in sync by hand.
+- Mirrors [`types.ts`](types.md). The provider enum is built from `ASSISTANT_PROVIDERS`, the tab and section enums from `RESULTS_PAGES` and `SCENARIO_SECTIONS` in [`lib/dashboard.ts`](../dashboard.md), and `requireAllowedModel` calls `isAllowedModel`, so none of them need to be kept in sync by hand.
 
 ## Testing
 

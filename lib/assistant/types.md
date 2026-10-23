@@ -11,8 +11,8 @@ The client and the Worker must agree on what a "dashboard snapshot" and a sessio
 | Type | Meaning |
 |---|---|
 | `AssistantProvider` | `'openai' \| 'google' \| 'anthropic'` |
-| `ResultsPage` | Results tab IDs: `'profit' \| 'flow' \| 'details'` |
-| `ScenarioSection` | Accordion IDs: `'prices' \| 'biology' \| 'yield' \| 'risk' \| 'run' \| 'sources'`. These are also the accordion `value`s in `scenario-panel.tsx`. |
+| `ResultsPage` | Results tab IDs: `'profit' \| 'flow' \| 'details'`. Re-exported from [`lib/dashboard.ts`](../dashboard.md), where it's derived from `RESULTS_PAGES`. |
+| `ScenarioSection` | Accordion IDs: `'prices' \| 'biology' \| 'yield' \| 'risk' \| 'run' \| 'sources'`. These are also the accordion `value`s in `scenario-panel.tsx`. Re-exported from [`lib/dashboard.ts`](../dashboard.md), where it's derived from `SCENARIO_SECTIONS`. |
 | `DashboardSnapshot` | What's on screen when a question is sent: `id`, `capturedAt` (ISO), `draftScenario`, `displayedResult \| null`, `isStale`, `isRunning`, `activeResultsPage`, and `openScenarioSections`. |
 | `MetricKind` | `usda_observation`, `derived_historical_assumption`, `scenario_input`, or `simulation_output` |
 | `UiLocation` | `{ resultPage? , scenarioSection? }` |

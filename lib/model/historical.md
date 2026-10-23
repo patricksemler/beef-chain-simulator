@@ -8,7 +8,7 @@ The design splits ownership. **USDA owns market and cost data. The user owns her
 
 ## Where it fits
 
-- **Imports:** the JSON data file and `types.ts`.
+- **Imports:** the JSON data file, `phases.ts` (`PHASE_ORDER`), and `types.ts`.
 - **Imported by:**
   - `defaults.ts` (builds `DEFAULT_SCENARIO`)
   - `simulate.ts` (year validation and the vintage label)

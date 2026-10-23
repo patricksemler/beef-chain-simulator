@@ -13,7 +13,7 @@ Users bring their own API keys. Pinning one model per provider keeps cost, laten
 | `ASSISTANT_MODELS` | `{ openai: gpt-5-mini, google: gemini-2.5-flash, anthropic: claude-sonnet-5 }`, each with a `label` and a `keyPlaceholder` for the connect form. |
 | `ASSISTANT_PROVIDERS` | `Object.keys(ASSISTANT_MODELS)` |
 | `isAssistantProvider(v)` | Type guard. [`storage.ts`](storage.md) uses it to sanitize a saved session. |
-| `isAllowedModel(p, m)` | Exported but unused. [`schemas.ts`](schemas.md) and [`provider.ts`](provider.md) repeat the check inline. |
+| `isAllowedModel(p, m)` | True if `m` is the pinned model for `p`. [`schemas.ts`](schemas.md) and [`provider.ts`](provider.md) both use it. |
 
 ## Where it fits
 

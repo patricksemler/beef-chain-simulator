@@ -15,7 +15,7 @@ ScenarioInput (types.ts) ─► runSimulation() ─► SimulationSummary (types.
                                             lib/assistant/context.ts (turns it into prompt text)
 ```
 
-- **Imports:** `historical.ts` (`isHistoricalYear`, `historicalDataVintage`) and `types.ts`.
+- **Imports:** `historical.ts` (`isHistoricalYear`, `historicalDataVintage`), `phases.ts` (`PHASE_ORDER`), and `types.ts`.
 - **Imported by:** `workers/simulation.worker.ts` (production path) and the tests. `blendedGradeIndex` is exported but currently used only inside this file.
 
 ## Public API
@@ -31,7 +31,7 @@ Internal: `mulberry32`, `normal` (Box–Muller), `percentile` (linear interpolat
 
 ## Core logic
 
-**Stages:** `cowCalf → stocker → feedlot → packer → retail` (`PHASES`). Each stage pays the previous stage's sale value as `acquisitionCost`. Cow-calf pays 0.
+**Stages:** `cowCalf → stocker → feedlot → packer → retail` (`PHASE_ORDER` from [`phases.ts`](phases.md)). Each stage pays the previous stage's sale value as `acquisitionCost`. Cow-calf pays 0.
 
 **Agents:** `min(totalHead, 2500)` agents. Each one represents `totalHead / agentCount` head, and every ledger sum is multiplied by that weight. An agent's entry month is where its midpoint head index falls in the cumulative `allocateEntryMonths` output.
 
@@ -96,7 +96,7 @@ The noise multipliers and clamps listed above are also hard-coded.
 
 ## Gotchas
 
-- `validateScenario` caps `trials` at 500, but the UI's Runs dropdown offers 1,000, which then fails validation.
+- `validateScenario` caps `trials` at 500. The UI's Runs dropdown offers 100, 250 and 500, so raising the cap means adding an option there too.
 - Trends compound from simulation month 0, not a calendar month. Ending inventory ignores trends.
 - The break-even retail price looks low on short horizons because most profit is unsold inventory, while the divisor counts only beef actually sold.
 - Mortality and gain apply to packer and retail too if a user sets them, even though that isn't physically meaningful.

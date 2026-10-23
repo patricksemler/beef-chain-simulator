@@ -25,7 +25,7 @@ Private: `profile(year)`, and `locationText(metric)`, which produces `"Profit" r
 
 ## Where it fits
 
-- **Imports:** the JSON, `context.ts`, and `metrics.ts`.
+- **Imports:** the JSON, [`lib/dashboard.ts`](../dashboard.md) (tab and section labels), `context.ts`, and `metrics.ts`.
 - **Imported by:** [`workers/assistant-api.ts`](../../workers/assistant-api.md) (`handleChat`) and tests.
 
 ## Testing
@@ -48,4 +48,4 @@ When you change engine mechanics or the UI layout, update this prose. The model 
 ## Gotchas
 
 - The prompt is large and is resent on every request (there's no caching). Watch its size when you add tables.
-- Changing a tab or section label requires updating both `context.ts` (`*_LABELS`) and the layout paragraph here.
+- Changing a tab or section label requires updating both [`lib/dashboard.ts`](../dashboard.md) (`*_LABELS`) and the layout paragraph here.

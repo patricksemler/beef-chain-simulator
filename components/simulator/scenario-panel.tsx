@@ -55,30 +55,16 @@ import {
   AVAILABLE_HISTORICAL_YEARS,
   type HistoricalYear,
 } from '@/lib/model/historical';
+import { PHASE_ORDER } from '@/lib/model/phases';
 import type { PhaseKey, ScenarioInput } from '@/lib/model/types';
-import type { ScenarioSection } from '@/lib/assistant/types';
+import {
+  CADENCE_LABELS,
+  horizonLabel,
+  MONTH_LABELS,
+  SCENARIO_SECTION_LABELS,
+  type ScenarioSection,
+} from '@/lib/dashboard';
 
-const PHASES: PhaseKey[] = [
-  'cowCalf',
-  'stocker',
-  'feedlot',
-  'packer',
-  'retail',
-];
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
 const MAX_HEAD = 30_000_000;
 const LOG_MAX = Math.log10(MAX_HEAD);
 
@@ -87,22 +73,17 @@ const HEAD_TICKS = [1, 100, 10_000, 1_000_000, MAX_HEAD];
 
 const HORIZON_OPTIONS = Array.from({ length: 10 }, (_, index) => ({
   value: String((index + 1) * 12),
-  label: index === 0 ? '1 year' : `${index + 1} years`,
+  label: horizonLabel((index + 1) * 12),
 }));
 
-const CADENCE_OPTIONS = [
-  { value: 'even', label: 'Even monthly' },
-  { value: 'upfront', label: 'All upfront' },
-  { value: 'spring', label: 'Spring weighted' },
-  { value: 'fall', label: 'Fall weighted' },
-  { value: 'custom', label: 'Custom weights' },
-] as const;
+const CADENCE_OPTIONS = Object.entries(CADENCE_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
 const TRIAL_OPTIONS = [
   { value: '100', label: '100 — fastest' },
   { value: '250', label: '250 — balanced' },
   { value: '500', label: '500 — tighter' },
-  { value: '1000', label: '1,000 — most stable' },
 ] as const;
 
 const YEAR_OPTIONS = [...AVAILABLE_HISTORICAL_YEARS]
@@ -295,7 +276,7 @@ export function ScenarioPanel({
                   Monthly weights
                 </h4>
                 <div className="grid grid-cols-4 gap-2">
-                  {MONTHS.map((month, index) => (
+                  {MONTH_LABELS.map((month, index) => (
                     <div key={month}>
                       <Label
                         htmlFor={`cadence-${index}`}
@@ -339,7 +320,7 @@ export function ScenarioPanel({
             }
             className="border-t border-[var(--line)]"
           >
-            <Section value="prices" title="Prices">
+            <Section value="prices">
               <div className="space-y-4">
                 <div className="field-grid">
                   <NumberField
@@ -451,7 +432,7 @@ export function ScenarioPanel({
               </div>
             </Section>
 
-            <Section value="biology" title="Herd &amp; costs">
+            <Section value="biology">
               <div className="space-y-4">
                 <div className="field-grid">
                   <NumberField
@@ -470,7 +451,7 @@ export function ScenarioPanel({
                     }
                   />
                 </div>
-                {PHASES.map((phase) => (
+                {PHASE_ORDER.map((phase) => (
                   <fieldset
                     key={phase}
                     className="phase-group"
@@ -540,7 +521,7 @@ export function ScenarioPanel({
               </div>
             </Section>
 
-            <Section value="yield" title="Yields &amp; trends">
+            <Section value="yield">
               <div className="field-grid">
                 <PercentField
                   id="dressing"
@@ -605,7 +586,7 @@ export function ScenarioPanel({
               </div>
             </Section>
 
-            <Section value="risk" title="Price swings">
+            <Section value="risk">
               <div className="field-grid">
                 <PercentField
                   id="calf-volatility"
@@ -657,7 +638,7 @@ export function ScenarioPanel({
               </div>
             </Section>
 
-            <Section value="run" title="Simulation settings">
+            <Section value="run">
               <div className="field-grid">
                 <div className="col-span-2">
                   <SelectField
@@ -691,7 +672,7 @@ export function ScenarioPanel({
               </div>
             </Section>
 
-            <Section value="sources" title="Data sources">
+            <Section value="sources">
               <ul id="data-sources" className="space-y-1" tabIndex={-1}>
                 {SOURCE_NOTES.map((source) => (
                   <li key={source.url}>
@@ -753,11 +734,9 @@ export function ScenarioPanel({
 
 function Section({
   value,
-  title,
   children,
 }: {
-  value: string;
-  title: string;
+  value: ScenarioSection;
   children: React.ReactNode;
 }) {
   return (
@@ -766,7 +745,9 @@ function Section({
       value={value}
       className="border-b border-[var(--line)] px-5"
     >
-      <AccordionTrigger className="section-trigger">{title}</AccordionTrigger>
+      <AccordionTrigger className="section-trigger">
+        {SCENARIO_SECTION_LABELS[value]}
+      </AccordionTrigger>
       <AccordionContent className="pb-4">{children}</AccordionContent>
     </AccordionItem>
   );

@@ -38,13 +38,12 @@ import { Sectors } from '@/components/simulator/results/sectors';
 import { StageDetails } from '@/components/simulator/results/stage-details';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { SimulationSummary } from '@/lib/model/types';
-import type { ResultsPage } from '@/lib/assistant/types';
+import {
+  RESULT_PAGE_LABELS,
+  RESULTS_PAGES,
+  type ResultsPage,
+} from '@/lib/dashboard';
 
-export const RESULT_PAGES = [
-  { id: 'profit', label: 'Profit' },
-  { id: 'flow', label: 'Cattle flow' },
-  { id: 'details', label: 'Stage details' },
-] as const;
 
 export function ResultsDashboard({
   result,
@@ -93,16 +92,16 @@ function ResultsPages({
     <div className="results">
       <div className="results-bar">
         <div className="results-header" aria-label="Results sections">
-          {RESULT_PAGES.map((page) => (
+          {RESULTS_PAGES.map((page) => (
             <button
-              key={page.id}
+              key={page}
               type="button"
               className="results-tab"
-              data-active={activePage === page.id}
-              aria-pressed={activePage === page.id}
-              onClick={() => onActivePageChange(page.id)}
+              data-active={activePage === page}
+              aria-pressed={activePage === page}
+              onClick={() => onActivePageChange(page)}
             >
-              {page.label}
+              {RESULT_PAGE_LABELS[page]}
             </button>
           ))}
           <span className="results-year">

@@ -30,9 +30,10 @@
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
 import { z } from 'zod';
-import { ASSISTANT_MODELS } from './models';
+import { RESULTS_PAGES, SCENARIO_SECTIONS } from '@/lib/dashboard';
+import { ASSISTANT_PROVIDERS, isAllowedModel } from './models';
 
-export const providerSchema = z.enum(['openai', 'google', 'anthropic']);
+export const providerSchema = z.enum(ASSISTANT_PROVIDERS);
 
 export const dashboardSnapshotSchema = z
   .object({
@@ -42,10 +43,8 @@ export const dashboardSnapshotSchema = z
     displayedResult: z.record(z.string(), z.unknown()).nullable(),
     isStale: z.boolean(),
     isRunning: z.boolean(),
-    activeResultsPage: z.enum(['profit', 'flow', 'details']),
-    openScenarioSections: z.array(
-      z.enum(['prices', 'biology', 'yield', 'risk', 'run', 'sources']),
-    ),
+    activeResultsPage: z.enum(RESULTS_PAGES),
+    openScenarioSections: z.array(z.enum(SCENARIO_SECTIONS)),
   })
   .strict();
 
@@ -53,7 +52,7 @@ function requireAllowedModel(
   value: { provider: z.infer<typeof providerSchema>; model: string },
   context: z.RefinementCtx,
 ) {
-  if (ASSISTANT_MODELS[value.provider].model !== value.model) {
+  if (!isAllowedModel(value.provider, value.model)) {
     context.addIssue({
       code: 'custom',
       path: ['model'],

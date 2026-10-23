@@ -34,7 +34,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import type { ProviderOptions } from '@ai-sdk/provider-utils';
 import type { LanguageModel } from 'ai';
-import { ASSISTANT_MODELS } from './models';
+import { isAllowedModel } from './models';
 import type { AssistantProvider } from './types';
 
 export function createAssistantModel(
@@ -42,7 +42,7 @@ export function createAssistantModel(
   apiKey: string,
   model: string,
 ): LanguageModel {
-  if (ASSISTANT_MODELS[provider].model !== model) {
+  if (!isAllowedModel(provider, model)) {
     throw new Error('Unsupported provider/model combination.');
   }
   if (provider === 'openai') {

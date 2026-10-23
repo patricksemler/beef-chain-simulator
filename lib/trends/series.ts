@@ -1,4 +1,5 @@
 import historicalData from '@/lib/data/historical-scenarios.json';
+import { PHASE_META } from '@/lib/model/phases';
 
 /**
  * The price series the public pages chart. The first five are the handoffs in
@@ -30,35 +31,35 @@ export const SERIES: Record<SeriesKey, Series> = {
     product: 'Weaned calf',
     unit: '$/cwt',
     decimals: 2,
-    color: '#688a9a',
+    color: PHASE_META.cowCalf.color,
   },
   feederPricePerCwt: {
     stage: 'Stocker',
     product: 'Feeder cattle',
     unit: '$/cwt',
     decimals: 2,
-    color: '#78927b',
+    color: PHASE_META.stocker.color,
   },
   fedPricePerCwt: {
     stage: 'Feedlot',
     product: 'Fed cattle',
     unit: '$/cwt',
     decimals: 2,
-    color: '#b68670',
+    color: PHASE_META.feedlot.color,
   },
   wholesalePricePerLb: {
     stage: 'Packer',
     product: 'Wholesale beef (Choice)',
     unit: '$/lb',
     decimals: 3,
-    color: '#ad9656',
+    color: PHASE_META.packer.color,
   },
   retailPricePerLb: {
     stage: 'Retail',
     product: 'Retail beef (Choice)',
     unit: '$/lb',
     decimals: 2,
-    color: '#8f7157',
+    color: PHASE_META.retail.color,
   },
   feedCostPerTon: {
     stage: 'Input',

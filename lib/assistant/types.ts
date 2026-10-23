@@ -30,19 +30,12 @@
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
 import type { UIMessage } from 'ai';
+import type { ResultsPage, ScenarioSection } from '@/lib/dashboard';
 import type { ScenarioInput, SimulationSummary } from '@/lib/model/types';
 
+export type { ResultsPage, ScenarioSection };
+
 export type AssistantProvider = 'openai' | 'google' | 'anthropic';
-
-export type ResultsPage = 'profit' | 'flow' | 'details';
-
-export type ScenarioSection =
-  | 'prices'
-  | 'biology'
-  | 'yield'
-  | 'risk'
-  | 'run'
-  | 'sources';
 
 /** Everything the dashboard is showing at the moment a question is sent. */
 export interface DashboardSnapshot {

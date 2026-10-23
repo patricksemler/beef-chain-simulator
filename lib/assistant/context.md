@@ -10,22 +10,18 @@ The assistant has no tools and can't read the page. To answer "why is feedlot lo
 
 | Export | Behavior |
 |---|---|
-| `RESULT_PAGE_LABELS` | `profit → "Profit"`, `flow → "Cattle flow"`, `details → "Stage details"`. `prompt.ts` uses it too. |
-| `SCENARIO_SECTION_LABELS` | `biology → "Herd & costs"`, etc. `prompt.ts` uses it too. |
-| `hasStaleDisplayedResult(draft, result)` | The same JSON-string comparison as `isStale` in `use-simulation.ts`. |
 | `describeScenario(s)` | A bulleted list of every input, grouped like the Scenario panel, including the grade mix, the indexes, and the custom cadence weights by month. |
 | `describeScenarioDifferences(draft, displayed)` | `"  - Label: before → after"` for every entry in `INPUT_LABELS` whose formatted value differs. |
 | `describeResults(r)` | Every number on the three tabs, tab by tab. It includes: headline; sectors (sorted by profit); sensitivity rows plus `sensitivityBase`; break-evens with cushion or gap (marked "not shown on screen"); flow shares; per-stage outcomes; the calf-to-retail timeline (`lastEntryMonth`); the per-stage ledger (money in/out, cash/total profit, per animal entering, margin, P10/P90, chance of loss); and the retail grade rows when `retailByGrade` exists. |
 | `describeDashboard(snapshot)` | Assembles the block: STATUS (tab, sections, running, stale plus differences), the scenario (with a heading saying whether it's run or an unrun edit), then DISPLAYED RESULTS or "No results are displayed yet". |
 
-Private: `CADENCE_LABELS`, `MONTHS`, the formatting helpers (`money` = compact + full, `pct`, `perCwt`, `perLb` with 3 decimals, `perHead`, `horizonLabel`), and `INPUT_LABELS` (one label and reader per editable input, including 6 per stage).
+Private: the formatting helpers (`money` = compact + full, `pct`, `perCwt`, `perLb` with 3 decimals, `perHead`) and `INPUT_LABELS` (one label and reader per editable input, including 6 per stage).
 
 ## Where it fits
 
-- **Imports:** `lib/model/format.ts` (so strings match the UI), the model types, and `PHASES` from `metrics.ts`.
+- **Imports:** `lib/model/format.ts` (so strings match the UI), [`lib/dashboard.ts`](../dashboard.md) (the tab, section, cadence, month and time-period labels the UI also renders), the model types, and `PHASES` from `metrics.ts`.
 - **Imported by:**
   - `prompt.ts` → `buildInstructions`, which runs in the Worker
-  - `components/simulator/simulator-page.tsx` (stale helper)
   - tests
 
 The client sends the raw snapshot, and the **Worker** builds this text, so `context.ts` must stay runtime-agnostic.

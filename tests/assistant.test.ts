@@ -34,8 +34,8 @@ import historicalData from '../lib/data/historical-scenarios.json';
 import {
   describeDashboard,
   describeScenarioDifferences,
-  hasStaleDisplayedResult,
 } from '../lib/assistant/context';
+import { hasStaleDisplayedResult } from '../lib/dashboard';
 import {
   HISTORICAL_YEARS,
   METRIC_REGISTRY,

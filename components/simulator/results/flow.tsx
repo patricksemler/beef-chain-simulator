@@ -29,7 +29,7 @@
  * ## Helpful notes
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
-import { PHASE_META, PHASE_ORDER } from '@/components/simulator/results/phases';
+import { PHASE_META, PHASE_ORDER } from '@/lib/model/phases';
 import { percent, whole } from '@/lib/model/format';
 import type { SimulationSummary } from '@/lib/model/types';
 

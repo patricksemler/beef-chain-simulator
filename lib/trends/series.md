@@ -8,7 +8,7 @@ The public pages show how the five chain prices and feed moved from 2015 to the 
 
 ## Where it fits
 
-- **Imports:** [`lib/data/historical-scenarios.json`](../data/historical-scenarios.md) only.
+- **Imports:** [`lib/data/historical-scenarios.json`](../data/historical-scenarios.md) and `PHASE_META` from [`lib/model/phases.ts`](../model/phases.md) (stage colors).
 - **Imported by:**
   - `app/page.tsx`, `app/trends/page.tsx`
   - `components/trends/*` (chain-ledger, ledger-cell, series-picker, series-table, trend-chart, index-chart, trends-dashboard)
@@ -19,7 +19,7 @@ The public pages show how the five chain prices and feed moved from 2015 to the 
 | Export | Purpose |
 |---|---|
 | `SeriesKey` | The 5 chain prices plus `feedCostPerTon`. These are the same names as the `ScenarioInput` and JSON fields. |
-| `SERIES` | Per-series metadata: `stage`, `product`, `unit`, `decimals`, `color`. The colors match the simulator's stage colors. |
+| `SERIES` | Per-series metadata: `stage`, `product`, `unit`, `decimals`, `color`. The five chain series take their color from `PHASE_META`, so they match the simulator's stage colors. |
 | `CHAIN_SERIES` / `ALL_SERIES` | The chain order, and that order plus feed. |
 | `YEARS`, `FIRST_YEAR`, `LAST_YEAR`, `ROWS` | One `SeriesRow` per available year. |
 | `DATA_SOURCES` | `Object.values(historicalData.sources)`. |
@@ -52,4 +52,3 @@ Suggested cases:
 ## When changing this file
 
 - If you add a series, it must exist in every JSON year. Then add it to `SERIES`, to `ALL_SERIES`, and to the `SERIES_SUMMARY` literal.
-- Keep the colors aligned with `components/simulator/results/phases.ts`.

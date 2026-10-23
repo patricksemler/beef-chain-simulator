@@ -35,6 +35,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // oxlint-disable-next-line import/default -- Vite's ?worker loader provides the constructor.
 import SimulationWorker from '../../workers/simulation.worker.ts?worker';
+import { hasStaleDisplayedResult } from '@/lib/dashboard';
 import { cloneDefaultScenario } from './defaults';
 import {
   applyHistoricalYear,
@@ -209,10 +210,10 @@ export function useSimulation() {
   }, [runScenario]);
 
   /** True when the inputs have moved on from whatever produced `result`. */
-  const isStale = useMemo(() => {
-    if (result === null || isRunning) return false;
-    return JSON.stringify(scenario) !== JSON.stringify(result.scenario);
-  }, [scenario, result, isRunning]);
+  const isStale = useMemo(
+    () => !isRunning && hasStaleDisplayedResult(scenario, result),
+    [scenario, result, isRunning],
+  );
 
   const restoreDefaults = useCallback(() => {
     void runScenario(cloneDefaultScenario()).catch(() => undefined);

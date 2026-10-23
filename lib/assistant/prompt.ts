@@ -30,11 +30,8 @@
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
 import historicalData from '@/lib/data/historical-scenarios.json';
-import {
-  describeDashboard,
-  RESULT_PAGE_LABELS,
-  SCENARIO_SECTION_LABELS,
-} from './context';
+import { RESULT_PAGE_LABELS, SCENARIO_SECTION_LABELS } from '@/lib/dashboard';
+import { describeDashboard } from './context';
 import {
   HISTORICAL_YEARS,
   METRIC_REGISTRY,

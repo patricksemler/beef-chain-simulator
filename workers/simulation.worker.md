@@ -26,7 +26,7 @@ Every response echoes `requestId`, so the hook can drop stale responses. The wor
 
 There's no automated test. The logic is all in `runSimulation`, which `tests/simulation.test.ts` covers.
 
-How to verify manually: load `/simulator` (via `npm run dev`). Results should appear, and an invalid input (such as 1,000 runs) should show the validation message.
+How to verify manually: load `/simulator` (via `npm run dev`). Results should appear, and an invalid input (such as "Custom weights" with every month set to 0) should show the validation message.
 
 If you add a test:
 1. Stub a global `self` with `postMessage` collecting calls.

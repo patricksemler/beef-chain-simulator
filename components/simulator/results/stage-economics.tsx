@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
 import { GradeBreakdown } from '@/components/simulator/results/grade-breakdown';
-import { PHASE_META } from '@/components/simulator/results/phases';
+import { PHASE_META } from '@/lib/model/phases';
 import { compactCurrency, currency } from '@/lib/model/format';
 import type {
   PhaseKey,

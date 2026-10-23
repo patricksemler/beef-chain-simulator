@@ -31,6 +31,7 @@
  */
 import historicalData from '@/lib/data/historical-scenarios.json';
 import { AVAILABLE_HISTORICAL_YEARS } from '@/lib/model/historical';
+import { PHASE_META, PHASE_ORDER } from '@/lib/model/phases';
 import type { PhaseKey } from '@/lib/model/types';
 import type { MetricDescriptor, SourceCitation, UiLocation } from './types';
 
@@ -250,13 +251,13 @@ const baseMetrics: MetricDescriptor[] = [
   },
 ];
 
-export const PHASES: Array<{ key: PhaseKey; id: string; label: string }> = [
-  { key: 'cowCalf', id: 'cow_calf', label: 'Cow-calf' },
-  { key: 'stocker', id: 'stocker', label: 'Stocker' },
-  { key: 'feedlot', id: 'feedlot', label: 'Feedlot' },
-  { key: 'packer', id: 'packer', label: 'Packer' },
-  { key: 'retail', id: 'retail', label: 'Retail' },
-];
+/** Stages in chain order, with a snake_case id for metric names (`cow_calf`). */
+export const PHASES: Array<{ key: PhaseKey; id: string; label: string }> =
+  PHASE_ORDER.map((key) => ({
+    key,
+    id: key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`),
+    label: PHASE_META[key].label,
+  }));
 
 const phaseMetrics = PHASES.flatMap<MetricDescriptor>(({ key, id, label }) => [
   {

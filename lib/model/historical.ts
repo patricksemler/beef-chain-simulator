@@ -30,15 +30,8 @@
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
 import historicalData from '@/lib/data/historical-scenarios.json';
-import type { PhaseKey, ScenarioInput } from './types';
-
-const PHASE_KEYS: PhaseKey[] = [
-  'cowCalf',
-  'stocker',
-  'feedlot',
-  'packer',
-  'retail',
-];
+import { PHASE_ORDER } from './phases';
+import type { ScenarioInput } from './types';
 
 export type HistoricalYear =
   keyof typeof historicalData.years extends `${infer Year extends number}`
@@ -87,7 +80,7 @@ export function applyHistoricalYear(
   next.dressingPercentage = profile.dressingPercentage;
   next.gradeMix = { ...profile.gradeMix };
   next.gradePriceIndex = { ...profile.gradePriceIndex };
-  for (const phase of PHASE_KEYS) {
+  for (const phase of PHASE_ORDER) {
     next.phases[phase] = { ...next.phases[phase], ...profile.phases[phase] };
   }
   return next;
