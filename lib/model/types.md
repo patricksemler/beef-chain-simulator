@@ -28,7 +28,7 @@ It's the single contract shared by the engine, the Web Worker, the React hook, e
 | `PhaseResult` | Per-stage output. Head counts (entered, exited, mortality, ending inventory); money (revenue, terminal inventory value, acquisition, direct, economic costs); profits (`operatingContribution` = cash, `economicProfit` = total); ratios; P10/P90/probability of loss; average exit weight. |
 | `MonthlyResult` | Per-month profit allocation by stage plus `chain`. It's computed but not displayed. |
 | `GradeResult` | Retail economics for one grade. The totals include beef on hand. The per-lb fields cover only beef sold. |
-| `SensitivityResult` | `lowEconomicProfit` / `highEconomicProfit` at ±10%, plus `swing`. |
+| `SensitivityResult` | `lowEconomicProfit` / `highEconomicProfit` at ±10%, the same runs' per-stage profit (`lowPhaseProfit` / `highPhaseProfit`), plus `swing`. |
 | `SimulationSummary` | The full result, including the echoed `scenario` (used for stale detection), `dataVintage`, chain totals, break-evens, `reconciliationDifference` (always 0), and `runtimeMs`. |
 | `SimulationProgress` | `{ completed, total }` trials. |
 

@@ -28,6 +28,7 @@ The design splits ownership. **USDA owns market and cost data. The user owns her
 | `isHistoricalYear(year)` | Type guard. |
 | `historicalDataVintage(year)` | `"Based on {year} USDA annual averages"`, stored on each result. |
 | `getHistoricalProfile(year)` | The raw JSON profile for a year. |
+| `isEditedFromProfile(scenario)` | True when any field `applyHistoricalYear` would load differs from the scenario's reference-year profile. Drives the "Edited from … profile" labels. |
 | `applyHistoricalYear(scenario, year)` | Returns a **new** scenario (`structuredClone`). It sets `referenceYear` and overwrites the USDA-owned fields: the 5 prices, feed $/ton, byproduct $/head, dressing %, `gradeMix`, `gradePriceIndex`, and each phase's `directCostPerHead` / `dailyCostPerHead` / `economicCostPerHead` (merged so `label`, days, gain, and mortality survive). |
 
 ## Invariants

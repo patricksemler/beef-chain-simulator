@@ -32,6 +32,7 @@
  * ## Helpful notes
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
+import { useState } from 'react';
 import { ArrowUpRight, Play, Undo2 } from 'lucide-react';
 import {
   Accordion,
@@ -48,11 +49,12 @@ import {
   PercentField,
   SelectField,
 } from '@/components/simulator/fields';
-import { SOURCE_NOTES } from '@/lib/model/defaults';
+import { cloneDefaultScenario, SOURCE_NOTES } from '@/lib/model/defaults';
 import { whole } from '@/lib/model/format';
 import {
   applyHistoricalYear,
   AVAILABLE_HISTORICAL_YEARS,
+  isEditedFromProfile,
   type HistoricalYear,
 } from '@/lib/model/historical';
 import { PHASE_ORDER } from '@/lib/model/phases';
@@ -129,6 +131,53 @@ export function ScenarioPanel({
   openSections,
   onOpenSectionsChange,
 }: Props) {
+  // One step of undo for the two actions that replace many inputs at once.
+  // It disappears as soon as the inputs move on from what the action left.
+  const [undo, setUndo] = useState<{
+    label: string;
+    before: ScenarioInput;
+    after: string;
+    rerun: boolean;
+  } | null>(null);
+  const canUndo = undo !== null && undo.after === JSON.stringify(scenario);
+
+  const resetScenario = () => {
+    setUndo({
+      label: 'Undo reset',
+      before: scenario,
+      after: JSON.stringify(cloneDefaultScenario()),
+      rerun: true,
+    });
+    restoreDefaults();
+  };
+
+  const changeYear = (year: HistoricalYear) => {
+    const next = applyHistoricalYear(scenario, year);
+    setUndo({
+      label: 'Undo year change',
+      before: scenario,
+      after: JSON.stringify(next),
+      rerun: false,
+    });
+    setScenario(next);
+  };
+
+  const undoLastChange = () => {
+    if (!undo) return;
+    if (undo.rerun) void runScenario(undo.before).catch(() => undefined);
+    else setScenario(undo.before);
+    setUndo(null);
+  };
+
+  const run = () => {
+    void runScenario(scenario).catch(() => undefined);
+    // In the single-column layout the results sit below the inputs.
+    if (!window.matchMedia('(min-width: 1024px)').matches)
+      document
+        .getElementById('results')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const updateNumber = (key: keyof ScenarioInput, value: number) =>
     setScenario((current) => ({ ...current, [key]: value }));
 
@@ -177,10 +226,10 @@ export function ScenarioPanel({
             variant="ghost"
             size="sm"
             className="-mr-2 h-9 gap-1.5 px-2.5 text-[0.9375rem] text-muted-foreground hover:text-[var(--ink)]"
-            onClick={restoreDefaults}
+            onClick={canUndo ? undoLastChange : resetScenario}
           >
             <Undo2 className="size-3.5" aria-hidden="true" />
-            Reset
+            {canUndo ? undo.label : 'Reset'}
           </Button>
         </header>
 
@@ -216,6 +265,8 @@ export function ScenarioPanel({
               <div className="pt-0.5">
                 <Slider
                   aria-label="Calves entering, logarithmic scale"
+                  thumbLabel="Calves entering"
+                  thumbValueText={`${whole(scenario.totalHead)} head`}
                   value={[headToSlider(scenario.totalHead)]}
                   onValueChange={(value) =>
                     updateNumber(
@@ -265,6 +316,21 @@ export function ScenarioPanel({
                   }))
                 }
               />
+            </div>
+
+            <div>
+              <SelectField
+                id="reference-year"
+                label="Market year (USDA prices and costs)"
+                value={String(scenario.referenceYear)}
+                options={YEAR_OPTIONS}
+                onChange={(value) => changeYear(Number(value) as HistoricalYear)}
+              />
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {isEditedFromProfile(scenario)
+                  ? `Edited from the ${scenario.referenceYear} profile. Choosing a year replaces prices, grade mix, dressing yield, and stage costs.`
+                  : 'Choosing a year replaces prices, grade mix, dressing yield, and stage costs.'}
+              </p>
             </div>
 
             {scenario.cadence === 'custom' ? (
@@ -508,7 +574,7 @@ export function ScenarioPanel({
                       />
                       <NumberField
                         id={`${phase}-economic-cost`}
-                        label="Overhead"
+                        label="Overhead & land"
                         unit="$/head"
                         value={scenario.phases[phase].economicCostPerHead}
                         onChange={(value) =>
@@ -587,6 +653,10 @@ export function ScenarioPanel({
             </Section>
 
             <Section value="risk">
+              <p className="mb-3 text-xs text-muted-foreground">
+                How much each price typically moves in a year. Correlation, from
+                0 to 1, sets how closely the prices move together.
+              </p>
               <div className="field-grid">
                 <PercentField
                   id="calf-volatility"
@@ -640,22 +710,6 @@ export function ScenarioPanel({
 
             <Section value="run">
               <div className="field-grid">
-                <div className="col-span-2">
-                  <SelectField
-                    id="reference-year"
-                    label="Reference year"
-                    value={String(scenario.referenceYear)}
-                    options={YEAR_OPTIONS}
-                    onChange={(value) =>
-                      setScenario((current) =>
-                        applyHistoricalYear(
-                          current,
-                          Number(value) as HistoricalYear,
-                        ),
-                      )
-                    }
-                  />
-                </div>
                 <SelectField
                   id="trials"
                   label="Runs"
@@ -713,7 +767,7 @@ export function ScenarioPanel({
 
           <Button
             className="run-button"
-            onClick={() => void runScenario(scenario).catch(() => undefined)}
+            onClick={run}
             disabled={isRunning}
             data-stale={isStale ? '' : undefined}
           >
@@ -722,7 +776,7 @@ export function ScenarioPanel({
             ) : (
               <>
                 <Play className="size-4 fill-current" aria-hidden="true" />
-                Run Simulation
+                {isStale ? 'Update results' : 'Run Simulation'}
               </>
             )}
           </Button>

@@ -164,7 +164,7 @@ describe('dashboard state description', () => {
         `- ${phase.label}: Profit ${compactCurrency(phase.economicProfit)}`,
       );
       expect(text).toContain(
-        `Cash profit ${currency(phase.operatingContribution)}`,
+        `Operating profit ${currency(phase.operatingContribution)}`,
       );
       expect(text).toContain(
         `${phase.label}: ${Math.round(phase.exitedHead).toLocaleString('en-US')} head exited`,

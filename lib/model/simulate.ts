@@ -780,11 +780,8 @@ function aggregate(
     }),
   ) as Record<GradeKey, GradeResult>;
   const sensitivity = buildSensitivity(input);
-  const sensitivityBase = simulateTrial(
-    { ...input, trials: 1 },
-    0,
-    true,
-  ).chainEconomicProfit;
+  const baseTrial = simulateTrial({ ...input, trials: 1 }, 0, true);
+  const sensitivityBase = baseTrial.chainEconomicProfit;
 
   return {
     scenario: input,
@@ -793,6 +790,7 @@ function aggregate(
     monthly,
     sensitivity,
     sensitivityBase,
+    sensitivityBasePhases: phaseProfits(baseTrial),
     totalStartedHead: input.totalHead,
     completedHead,
     mortalityHead,
@@ -890,25 +888,27 @@ function buildSensitivity(input: ScenarioInput): SensitivityResult[] {
       const high = structuredClone(input);
       driver.apply(low, 0.9);
       driver.apply(high, 1.1);
-      const lowProfit = simulateTrial(
-        { ...low, trials: 1 },
-        0,
-        true,
-      ).chainEconomicProfit;
-      const highProfit = simulateTrial(
-        { ...high, trials: 1 },
-        0,
-        true,
-      ).chainEconomicProfit;
+      const lowTrial = simulateTrial({ ...low, trials: 1 }, 0, true);
+      const highTrial = simulateTrial({ ...high, trials: 1 }, 0, true);
+      const lowProfit = lowTrial.chainEconomicProfit;
+      const highProfit = highTrial.chainEconomicProfit;
       return {
         key: driver.key,
         label: driver.label,
         lowEconomicProfit: lowProfit,
         highEconomicProfit: highProfit,
+        lowPhaseProfit: phaseProfits(lowTrial),
+        highPhaseProfit: phaseProfits(highTrial),
         swing: Math.abs(highProfit - lowProfit) / 2,
       };
     })
     .sort((a, b) => b.swing - a.swing);
+}
+
+function phaseProfits(trial: TrialResult) {
+  return Object.fromEntries(
+    PHASE_ORDER.map((key) => [key, trial.phases[key].economicProfit]),
+  ) as Record<PhaseKey, number>;
 }
 
 export function runSimulation(

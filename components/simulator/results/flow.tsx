@@ -114,9 +114,11 @@ export function Flow({ result }: { result: SimulationSummary }) {
         </div>
 
         <ol className="flow-track">
-          {PHASE_ORDER.map((key) => {
+          {PHASE_ORDER.map((key, index) => {
             const phase = result.phases[key];
             const share = phase.exitedHead / entered;
+            const exitVerb =
+              index === PHASE_ORDER.length - 1 ? 'sold' : 'moved on';
             return (
               <li key={key} className="flow-node">
                 <p className="label flow-label">{phase.label}</p>
@@ -131,10 +133,12 @@ export function Flow({ result }: { result: SimulationSummary }) {
                   />
                 </div>
                 <p className="detail flow-detail">
-                  {percent(share)}
-                  {phase.averageExitWeight > 0
-                    ? ` · ${whole(phase.averageExitWeight)} lb`
-                    : ''}
+                  {percent(share)} {exitVerb}
+                  {phase.averageExitWeight > 0 ? (
+                    <span className="block">
+                      {whole(phase.averageExitWeight)} lb
+                    </span>
+                  ) : null}
                 </p>
               </li>
             );
@@ -248,13 +252,22 @@ function StageOutcomes({ result }: { result: SimulationSummary }) {
                 {whole(phase.enteredHead)}
                 <small> in</small>
               </span>
+              <p className="outcome-counts" aria-hidden="true">
+                {segments
+                  .filter((segment) => segment.value > 0)
+                  .map(
+                    (segment) =>
+                      `${whole(segment.value)} ${segment.name.toLowerCase()}`,
+                  )
+                  .join(' · ')}
+              </p>
             </div>
           );
         })}
       </div>
       <p className="panel-note">
-        Hover a segment for exact head counts. Cattle still in a stage when the
-        period ends are counted at their current value, not sold.
+        Cattle still in a stage when the period ends are counted at their
+        current value, not sold.
       </p>
     </section>
   );

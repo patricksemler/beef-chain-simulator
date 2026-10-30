@@ -34,19 +34,27 @@ import {
   RangeScale,
   domainAcross,
 } from '@/components/simulator/results/range-bar';
+import { LOSS_WARNING_SHARE, lossChanceLabel } from '@/lib/dashboard';
 import {
   compactCurrency,
   compactNumber,
+  currency,
   percent,
   whole,
 } from '@/lib/model/format';
+import { PHASE_ORDER } from '@/lib/model/phases';
 import type { SimulationSummary } from '@/lib/model/types';
 
 export function Headline({ result }: { result: SimulationSummary }) {
   const profit = result.chainEconomicProfit;
   const domain = domainAcross([result.chainP10, result.chainP90, profit]);
-  const completedShare =
-    result.completedHead / Math.max(result.totalStartedHead, 1);
+  const startedHead = Math.max(result.totalStartedHead, 1);
+  const completedShare = result.completedHead / startedHead;
+  const unsoldValue = PHASE_ORDER.reduce(
+    (sum, key) => sum + result.phases[key].terminalInventoryValue,
+    0,
+  );
+  const trials = result.scenario.trials;
 
   return (
     <section className="headline" aria-labelledby="headline-heading">
@@ -59,6 +67,10 @@ export function Headline({ result }: { result: SimulationSummary }) {
           className={`headline-value ${profit < 0 ? 'text-[var(--negative)]' : 'text-[var(--ink)]'}`}
         >
           {compactCurrency(profit)}
+        </p>
+        <p className="detail mt-1">
+          Median of {whole(trials)} runs · {currency(profit / startedHead)} per
+          calf entered
         </p>
 
         <div className="mt-5">
@@ -75,12 +87,24 @@ export function Headline({ result }: { result: SimulationSummary }) {
             high={result.chainP90}
             domain={domain}
           />
+          <p className="detail mt-2">
+            8 in 10 runs fall between {compactCurrency(result.chainP10)} and{' '}
+            {compactCurrency(result.chainP90)}.
+          </p>
         </div>
+        {unsoldValue > 0 ? (
+          <p className="headline-note">
+            Includes <strong>{compactCurrency(unsoldValue)}</strong> for cattle
+            still in the chain when the period ends (
+            {percent(result.endingInventoryHead / startedHead)} of calves),
+            valued at market prices rather than sold.
+          </p>
+        ) : null}
       </div>
 
       <dl className="headline-stats">
         <Stat
-          label="Cash profit"
+          label="Operating profit"
           value={compactCurrency(result.chainOperatingContribution)}
           detail="Before overhead"
           negative={result.chainOperatingContribution < 0}
@@ -97,9 +121,9 @@ export function Headline({ result }: { result: SimulationSummary }) {
         />
         <Stat
           label="Chance of a loss"
-          value={percent(result.chainProbabilityOfLoss)}
-          detail={`Across ${whole(result.scenario.trials)} runs`}
-          negative={result.chainProbabilityOfLoss > 0.25}
+          value={lossChanceLabel(result.chainProbabilityOfLoss, trials)}
+          detail={`Across ${whole(trials)} runs`}
+          negative={result.chainProbabilityOfLoss > LOSS_WARNING_SHARE}
         />
       </dl>
     </section>

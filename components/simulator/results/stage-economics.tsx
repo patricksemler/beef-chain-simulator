@@ -1,19 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ReferenceLine,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
 import { GradeBreakdown } from '@/components/simulator/results/grade-breakdown';
 import { PHASE_META } from '@/lib/model/phases';
-import { compactCurrency, currency } from '@/lib/model/format';
+import { compactCurrency, currency, percent } from '@/lib/model/format';
 import type {
   PhaseKey,
   PhaseResult,
@@ -50,10 +40,6 @@ const STAGE_STORY: Record<
     output: 'Retail beef',
   },
 };
-
-const sensitivityConfig = {
-  profit: { label: 'Profit per head', color: '#500000' },
-} satisfies ChartConfig;
 
 type BridgeRow = {
   label: string;
@@ -107,18 +93,32 @@ export function StageEconomics({
     [phase],
   );
 
-  const maxBridgeValue = Math.max(
-    ...bridge.map((row) => Math.abs(row.value)),
-    1,
+  // Waterfall: money in rises from zero, each cost steps down from the running
+  // total, and profit is drawn from zero so it lines up with where costs end.
+  const steps = bridge.map((row, index) => {
+    const start =
+      row.kind === 'cost'
+        ? bridge.slice(0, index).reduce((sum, earlier) => sum + earlier.value, 0)
+        : 0;
+    return { ...row, start, end: start + row.value };
+  });
+  const lowest = Math.min(0, ...steps.flatMap((step) => [step.start, step.end]));
+  const highest = Math.max(
+    ...steps.flatMap((step) => [step.start, step.end]),
+    lowest + 1,
   );
+  const at = (value: number) =>
+    ((value - lowest) / (highest - lowest)) * 100;
   const controllableCosts = phase.directCosts + phase.economicCosts;
-  const sensitivity = [-20, -10, 0, 10, 20].map((change) => ({
+  const sensitivity = [-10, 0, 10].map((change) => ({
     change,
     profit: perHead(
       phase.economicProfit - controllableCosts * (change / 100),
       phase,
     ),
   }));
+  const cushion =
+    controllableCosts > 0 ? phase.economicProfit / controllableCosts : null;
   const expenseTotal = Math.max(
     phase.acquisitionCost + phase.directCosts + phase.economicCosts,
     1,
@@ -163,19 +163,24 @@ export function StageEconomics({
           <div className="stage-visual-heading">
             <div>
               <h4>Profit bridge</h4>
-              <p>Average dollars per animal entering this stage</p>
+              <p>Typical dollars per animal entering this stage</p>
             </div>
           </div>
           <div className="profit-bridge">
-            {bridge.map((row) => (
+            {steps.map((row) => (
               <div key={row.label} className="profit-bridge-row">
                 <span>{row.label}</span>
-                <div className="profit-bridge-track" aria-hidden="true">
+                <div
+                  className="profit-bridge-track"
+                  style={{ '--zero': `${at(0)}%` } as React.CSSProperties}
+                  aria-hidden="true"
+                >
                   <span
                     data-kind={row.kind}
                     data-negative={row.value < 0}
                     style={{
-                      width: `${(Math.abs(row.value) / maxBridgeValue) * 50}%`,
+                      left: `${at(Math.min(row.start, row.end))}%`,
+                      width: `${Math.abs(at(row.end) - at(row.start))}%`,
                     }}
                   />
                 </div>
@@ -237,80 +242,35 @@ export function StageEconomics({
               <p>Profit if operating and overhead costs move together</p>
             </div>
           </div>
-          <ChartContainer
-            config={sensitivityConfig}
-            className="cost-pressure-chart aspect-auto h-[270px] w-full"
-          >
-            <LineChart
-              data={sensitivity}
-              margin={{ left: 4, right: 18, top: 18, bottom: 4 }}
-            >
-              <CartesianGrid
-                vertical={false}
-                stroke="var(--line)"
-                strokeDasharray="4 4"
-              />
-              <XAxis
-                dataKey="change"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={10}
-                tickFormatter={(value) =>
-                  `${Number(value) > 0 ? '+' : ''}${value}%`
-                }
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                width={60}
-                tickFormatter={(value) => compactCurrency(value)}
-              />
-              <ReferenceLine
-                x={0}
-                stroke="var(--muted-foreground)"
-                strokeDasharray="4 4"
-              />
-              <ReferenceLine
-                y={0}
-                stroke="var(--negative)"
-                strokeOpacity={0.45}
-              />
-              <Tooltip
-                cursor={{
-                  stroke: 'var(--muted-foreground)',
-                  strokeOpacity: 0.3,
-                }}
-                formatter={(value) => [
-                  currency(Number(value)),
-                  'Profit per head',
-                ]}
-                labelFormatter={(value) =>
-                  `${Number(value) > 0 ? '+' : ''}${value}% expenses`
-                }
-              />
-              <Line
-                type="monotone"
-                dataKey="profit"
-                stroke="var(--color-profit)"
-                strokeWidth={3}
-                dot={{ r: 4, fill: 'var(--color-profit)', strokeWidth: 0 }}
-                activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}
-                isAnimationActive={false}
-              />
-            </LineChart>
-          </ChartContainer>
+          {cushion !== null ? (
+            <p className="cost-pressure-headline">
+              {cushion >= 0 ? (
+                <>
+                  Costs could rise <strong>{percent(cushion)}</strong> before
+                  this stage loses money.
+                </>
+              ) : -cushion < 1 ? (
+                <>
+                  Costs would need to fall <strong>{percent(-cushion)}</strong>{' '}
+                  for this stage to break even.
+                </>
+              ) : (
+                <>Cutting these costs alone cannot make this stage break even.</>
+              )}
+            </p>
+          ) : null}
           <div className="cost-pressure-summary">
             <span>
               Costs −10%
-              <strong>{currency(sensitivity[1].profit)}</strong>
+              <strong>{currency(sensitivity[0].profit)}</strong>
             </span>
             <span>
               Current
-              <strong>{currency(sensitivity[2].profit)}</strong>
+              <strong>{currency(sensitivity[1].profit)}</strong>
             </span>
             <span>
               Costs +10%
-              <strong>{currency(sensitivity[3].profit)}</strong>
+              <strong>{currency(sensitivity[2].profit)}</strong>
             </span>
           </div>
           <p className="stage-visual-note">

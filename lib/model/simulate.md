@@ -55,7 +55,7 @@ Then:
 Here `lbs = liveWt × dressing% × saleableYield`.
 
 **Ledger identities (per trial and after aggregation):**
-- `operatingContribution = revenue + terminalInventoryValue − acquisitionCost − directCosts` (shown as "Cash profit")
+- `operatingContribution = revenue + terminalInventoryValue − acquisitionCost − directCosts` (shown as "Operating profit")
 - `economicProfit = operatingContribution − economicCosts` (shown as "Total profit")
 - Chain = Σ stages. Inter-stage transfers cancel, which is why the **wholesale price sensitivity swing is ~0**.
 
@@ -76,7 +76,7 @@ Here `lbs = liveWt × dressing% × saleableYield`.
 **Sensitivity (`buildSensitivity`):**
 - 7 drivers: retail, wholesale, fed, feeder, calf, feed, and saleable yield (clamped to 0.40–0.85).
 - Each driver is set to ×0.9 and ×1.1, and one **deterministic** trial runs for each. `swing = |hi − lo| / 2`, and the list is sorted by swing descending.
-- `sensitivityBase` is the deterministic run with no changes.
+- `sensitivityBase` is the deterministic run with no changes; `sensitivityBasePhases` holds each stage's profit in that run, and every driver also records `lowPhaseProfit` / `highPhaseProfit` so the dashboard can show one stage's sensitivity.
 - Deterministic means no shocks, no noise, and **no mortality**, so the base won't equal the headline median.
 - It's shown in the "What moves profit most" chart (`profit-drivers.tsx`) and sent to the assistant.
 

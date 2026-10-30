@@ -494,6 +494,16 @@
   color: #7f2f2c;
 }
 
+/* Below the two-column layout the rail scrolls with the page, so keep the
+   Run button in reach while editing. */
+@media (max-width: 1023px) {
+  .scenario-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+  }
+}
+
 /* ---------- Results ---------- */
 
 .results {
@@ -590,6 +600,29 @@
   font-variant-numeric: tabular-nums;
 }
 
+.results-outdated {
+  margin-top: 0.625rem;
+  border: 1px solid #e8c9a0;
+  border-radius: var(--radius);
+  background: #fdf3e4;
+  padding: 0.625rem 0.875rem;
+  color: #6b4513;
+  font-size: 0.875rem;
+  font-weight: 550;
+  line-height: 1.45;
+}
+
+.results-content {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  transition: opacity 160ms ease;
+}
+
+.results-content[data-outdated] {
+  opacity: 0.45;
+}
+
 .panel {
   border: 1px solid var(--line);
   border-radius: calc(var(--radius) * 1.5);
@@ -648,6 +681,13 @@
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--ink);
+}
+
+.sector-summary-risk {
+  padding-left: 1.125rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .sector-summary-dot {
@@ -1740,6 +1780,20 @@
   font-variant-numeric: tabular-nums;
 }
 
+.headline-note {
+  margin-top: 1rem;
+  border-left: 3px solid var(--chart-context);
+  padding-left: 0.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.headline-note strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+
 .headline .range-bar {
   height: 1.5rem;
 }
@@ -2216,7 +2270,7 @@
 .profit-bridge-track::after {
   position: absolute;
   inset-block: 0;
-  left: calc(50% - 1px);
+  left: calc(var(--zero, 50%) - 1px);
   width: 2px;
   background: color-mix(in srgb, var(--muted-foreground) 45%, transparent);
   content: '';
@@ -2225,15 +2279,13 @@
 .profit-bridge-track > span {
   position: absolute;
   top: 0;
-  left: 50%;
+  min-width: 2px;
   height: 100%;
   border-radius: 999px;
   background: #6d7a8d;
 }
 
 .profit-bridge-track > span[data-negative='true'] {
-  right: 50%;
-  left: auto;
   background: #c9b59a;
 }
 
@@ -2297,8 +2349,18 @@
   font-weight: 600;
 }
 
-.cost-pressure-chart {
-  margin-top: 0.75rem;
+.cost-pressure-headline {
+  margin: 1rem 0;
+  color: var(--muted-foreground);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.cost-pressure-headline strong {
+  color: var(--ink);
+  font-size: 1.375rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
 }
 
 .cost-pressure-summary {
@@ -2549,6 +2611,22 @@
   gap: 0.75rem;
 }
 
+.driver-row {
+  grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr) 8.75rem;
+}
+
+.drivers-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.drivers-header .field {
+  width: 10.5rem;
+}
+
 .driver-label {
   font-size: 0.875rem;
   font-weight: 550;
@@ -2599,6 +2677,14 @@
 
 .driver-bar[data-side='down'] {
   border-radius: 4px 0 0 4px;
+}
+
+.outcome-counts {
+  grid-column: 2 / -1;
+  margin-top: -0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .outcome-track {
@@ -2862,6 +2948,14 @@
     gap: 0.5rem;
   }
 
+  .driver-row {
+    grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr) 7.5rem;
+  }
+
+  .driver-value {
+    font-size: 0.75rem;
+  }
+
   .driver-label {
     font-size: 0.8125rem;
   }
@@ -2885,6 +2979,13 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 0.75rem;
+}
+
+/* Clears the sticky Run button on single-column layouts. */
+@media (max-width: 1023px) {
+  .assistant-widget {
+    --assistant-gap: calc(5.75rem + env(safe-area-inset-bottom));
+  }
 }
 
 .assistant-launcher {
