@@ -8,8 +8,7 @@ A browser-based planning model for exploring the economics of moving cattle thro
 - Reports operating contribution and full economic profit by sector.
 - Models mortality, biological variation, work-in-process inventory, correlated market risk, and price trends.
 - Loads year-specific USDA market and cost profiles for every year from 2015 through 2025 while preserving the user's herd size, timing, cadence, and risk settings.
-- Compares a current scenario against a locally saved baseline.
-- Shows monthly profit, sector ledgers, risk ranges, break-even prices, and sensitivity results.
+- Shows profit by stage, cattle flow, stage ledgers, risk ranges, and sensitivity results.
 
 The bundled national reference assumptions are editable and intended for scenario planning. Results are not USDA forecasts or financial advice.
 

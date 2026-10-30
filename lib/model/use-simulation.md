@@ -49,7 +49,7 @@ SimulatorPage ─ useSimulation() ─postMessage({requestId, scenario})─► wo
 - **WebMCP tool `run_beef_supply_chain_scenario`** is registered only if `document.modelContext?.registerTool` exists.
   - Inputs: `totalHead` (required, 1–30M) and `horizonYears` (required, 1–10). Optional: `referenceYear`, `cadence` (not custom), the 5 prices plus `feedCostPerTon`, and `seed`.
   - It applies the year **first**, then the overrides, then runs. That updates the visible dashboard.
-  - It returns chain profit, cash profit, the head counts, and P10/P90.
+  - It returns chain profit, operating profit, the head counts, and P10/P90.
   - The tool is aborted on unmount. It reads the current draft through `scenarioRef`, so the registration isn't torn down on every edit.
 
 ## Testing

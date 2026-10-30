@@ -11,7 +11,7 @@ It gives the assistant one authoritative definition, unit, UI location, and sour
 | Export | Contents |
 |---|---|
 | `PHASES` | `{key, id (snake_case), label}` for the 5 stages, derived from [`lib/model/phases.ts`](../model/phases.md). [`context.ts`](context.md) reuses it for stage ordering and labels. |
-| `METRIC_REGISTRY` | 35 entries. 20 base metrics: 10 inputs or USDA-derived (5 prices, feed, byproduct, dressing, saleable yield, head) and 10 chain outputs (profit, cash profit, range, chance of loss, finished, beef produced, deaths, still in chain, 2 break-evens). Plus 15 per-stage metrics (profit, margin, direct cost × 5 stages). Every `simulation_output` has its `sourceIds` overwritten to `model` plus all four ERS sources. |
+| `METRIC_REGISTRY` | 35 entries. 20 base metrics: 10 inputs or USDA-derived (5 prices, feed, byproduct, dressing, saleable yield, head) and 10 chain outputs (profit, operating profit, range, chance of loss, finished, beef produced, deaths, still in chain, 2 break-evens). Plus 15 per-stage metrics (profit, margin, direct cost × 5 stages). Every `simulation_output` has its `sourceIds` overwritten to `model` plus all four ERS sources. |
 | `METRIC_BY_ID` | `Map<id, metric>`. Exported but unused. |
 | `SOURCE_REGISTRY` | Every entry in `historicalData.sources` (`livestock`, `priceSpreads`, `cowCalf`, `feedGrains`, `grading`, `lmr`) with `url = landingPage`, plus a `model` pseudo-source. The keys are the `[source:ID]` tokens the model may emit. |
 | `HISTORICAL_YEARS` | A copy of `AVAILABLE_HISTORICAL_YEARS`. |

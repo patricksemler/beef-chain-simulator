@@ -18,6 +18,7 @@
  * thing. The Worker's request schema builds its enums from the ID arrays. It
  * has no browser or React code, because the Cloudflare Worker imports it too.
  */
+import { percent } from '@/lib/model/format';
 import type {
   EntryCadence,
   ScenarioInput,
@@ -88,4 +89,16 @@ export function hasStaleDisplayedResult(
     displayedResult !== null &&
     JSON.stringify(draftScenario) !== JSON.stringify(displayedResult.scenario)
   );
+}
+
+/** Chance of a loss above which a result is shown in the loss colour. */
+export const LOSS_WARNING_SHARE = 0.25;
+
+/**
+ * Chance of a loss in words. Zero losses in N runs only means "rarer than
+ * 1 in N", so it is never shown as 0%.
+ */
+export function lossChanceLabel(probability: number, trials: number) {
+  if (probability === 0) return `<1 in ${trials}`;
+  return percent(probability);
 }

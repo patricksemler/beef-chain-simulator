@@ -30,7 +30,8 @@
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
 import { PHASE_META, PHASE_ORDER } from '@/lib/model/phases';
-import { compactCurrency, percent } from '@/lib/model/format';
+import { LOSS_WARNING_SHARE, lossChanceLabel } from '@/lib/dashboard';
+import { compactCurrency } from '@/lib/model/format';
 import type { SimulationSummary } from '@/lib/model/types';
 
 export function Sectors({ result }: { result: SimulationSummary }) {
@@ -52,18 +53,29 @@ export function Sectors({ result }: { result: SimulationSummary }) {
 
       <div className="sector-summary">
         {rows.map(({ key, phase, value }) => (
-          <div
-            key={key}
-            className="sector-summary-row"
-            title={`${phase.label}: ${compactCurrency(value)} · ${percent(phase.probabilityOfLoss)} chance of a loss`}
-          >
-            <div className="sector-summary-label">
-              <span
-                className="sector-summary-dot"
-                style={{ background: PHASE_META[key].color }}
-                aria-hidden="true"
-              />
-              <span>{phase.label}</span>
+          <div key={key} className="sector-summary-row">
+            <div>
+              <div className="sector-summary-label">
+                <span
+                  className="sector-summary-dot"
+                  style={{ background: PHASE_META[key].color }}
+                  aria-hidden="true"
+                />
+                <span>{phase.label}</span>
+              </div>
+              <p
+                className={`sector-summary-risk ${
+                  phase.probabilityOfLoss > LOSS_WARNING_SHARE
+                    ? 'text-[var(--negative)]'
+                    : ''
+                }`}
+              >
+                {lossChanceLabel(
+                  phase.probabilityOfLoss,
+                  result.scenario.trials,
+                )}{' '}
+                chance of a loss
+              </p>
             </div>
             <div className="sector-summary-bar" aria-hidden="true">
               <span

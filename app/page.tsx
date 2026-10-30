@@ -46,7 +46,7 @@ const CAPABILITIES = [
   },
   {
     title: 'Reports by sector',
-    body: 'Cash and full economic profit for each stage, monthly profit, break-even prices, risk ranges, and sensitivities, compared against a saved baseline.',
+    body: 'Operating and full economic profit for each stage, cattle flow, risk ranges, and what moves profit most.',
   },
 ];
 

@@ -123,6 +123,8 @@ export default function SimulatorPage() {
         <div id="results" className="min-w-0">
           <ResultsDashboard
             result={simulation.result}
+            isStale={simulation.isStale}
+            error={simulation.error}
             activePage={activeResultsPage}
             onActivePageChange={setActiveResultsPage}
           />

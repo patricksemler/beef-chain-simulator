@@ -37,6 +37,7 @@ import { ProfitDrivers } from '@/components/simulator/results/profit-drivers';
 import { Sectors } from '@/components/simulator/results/sectors';
 import { StageDetails } from '@/components/simulator/results/stage-details';
 import { Skeleton } from '@/components/ui/skeleton';
+import { isEditedFromProfile } from '@/lib/model/historical';
 import type { SimulationSummary } from '@/lib/model/types';
 import {
   RESULT_PAGE_LABELS,
@@ -47,10 +48,14 @@ import {
 
 export function ResultsDashboard({
   result,
+  isStale,
+  error,
   activePage,
   onActivePageChange,
 }: {
   result: SimulationSummary | null;
+  isStale: boolean;
+  error: string | null;
   activePage: ResultsPage;
   onActivePageChange: (page: ResultsPage) => void;
 }) {
@@ -59,6 +64,8 @@ export function ResultsDashboard({
   return (
     <ResultsPages
       result={result}
+      isOutdated={isStale || error !== null}
+      error={error}
       activePage={activePage}
       onActivePageChange={onActivePageChange}
     />
@@ -67,10 +74,14 @@ export function ResultsDashboard({
 
 function ResultsPages({
   result,
+  isOutdated,
+  error,
   activePage,
   onActivePageChange,
 }: {
   result: SimulationSummary;
+  isOutdated: boolean;
+  error: string | null;
   activePage: ResultsPage;
   onActivePageChange: (page: ResultsPage) => void;
 }) {
@@ -105,11 +116,24 @@ function ResultsPages({
             </button>
           ))}
           <span className="results-year">
-            {result.scenario.referenceYear} USDA profile
+            {isEditedFromProfile(result.scenario)
+              ? `Edited from ${result.scenario.referenceYear} USDA profile`
+              : `${result.scenario.referenceYear} USDA profile`}
           </span>
         </div>
+        <div aria-live="polite" className="empty:hidden">
+          {isOutdated ? (
+            <p className="results-outdated">
+              {error !== null
+                ? `The last run failed, so these results are from an earlier run. ${error}`
+                : 'These results are for your previous inputs. Run the simulation to update them.'}
+            </p>
+          ) : null}
+        </div>
       </div>
-      {currentView}
+      <div className="results-content" data-outdated={isOutdated || undefined}>
+        {currentView}
+      </div>
     </div>
   );
 }

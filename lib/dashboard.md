@@ -27,6 +27,8 @@ The assistant has to describe the screen using the exact words the screen uses. 
 | `CADENCE_LABELS` | One label per `EntryCadence`. The order of its keys is the order of the "When calves enter" dropdown. |
 | `MONTH_LABELS` | `Jan` … `Dec`, for the custom monthly weights. |
 | `horizonLabel(months)` | `"1 year"` / `"N years"`. |
+| `LOSS_WARNING_SHARE` | 0.25. Chance of a loss above which results use the loss colour, everywhere. |
+| `lossChanceLabel(probability, trials)` | `"<1 in N"` when no run lost money, otherwise a percent. |
 | `hasStaleDisplayedResult(draft, result)` | `result !== null` and the JSON of the draft differs from `result.scenario`. `useSimulation`'s `isStale` adds `!isRunning`. The assistant snapshot uses it directly and sends `isRunning` separately. |
 
 ## Testing

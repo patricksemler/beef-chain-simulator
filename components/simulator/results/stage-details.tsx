@@ -16,6 +16,7 @@ import {
   domainAcross,
 } from '@/components/simulator/results/range-bar';
 import { StageEconomics } from '@/components/simulator/results/stage-economics';
+import { LOSS_WARNING_SHARE, lossChanceLabel } from '@/lib/dashboard';
 import { compactCurrency, currency, percent } from '@/lib/model/format';
 import type { PhaseKey, SimulationSummary } from '@/lib/model/types';
 
@@ -76,8 +77,11 @@ export function StageDetails({ result }: { result: SimulationSummary }) {
           <SnapshotStat label="Margin" value={percent(phase.margin)} />
           <SnapshotStat
             label="Chance of a loss"
-            value={percent(phase.probabilityOfLoss)}
-            negative={phase.probabilityOfLoss > 0.5}
+            value={lossChanceLabel(
+              phase.probabilityOfLoss,
+              result.scenario.trials,
+            )}
+            negative={phase.probabilityOfLoss > LOSS_WARNING_SHARE}
           />
         </dl>
         <div className="stage-snapshot-range">
@@ -112,7 +116,7 @@ export function StageDetails({ result }: { result: SimulationSummary }) {
                 <TableHead>Stage</TableHead>
                 <TableHead className="text-right">Money in</TableHead>
                 <TableHead className="text-right">Money out</TableHead>
-                <TableHead className="text-right">Cash profit</TableHead>
+                <TableHead className="text-right">Operating profit</TableHead>
                 <TableHead className="text-right">Total profit</TableHead>
                 <TableHead className="text-right">Margin</TableHead>
                 <TableHead className="text-right">Chance of a loss</TableHead>
@@ -172,12 +176,15 @@ export function StageDetails({ result }: { result: SimulationSummary }) {
                     </TableCell>
                     <TableCell
                       className={`text-right tabular-nums ${
-                        row.probabilityOfLoss > 0.5
+                        row.probabilityOfLoss > LOSS_WARNING_SHARE
                           ? 'text-[var(--negative)]'
                           : ''
                       }`}
                     >
-                      {percent(row.probabilityOfLoss)}
+                      {lossChanceLabel(
+                        row.probabilityOfLoss,
+                        result.scenario.trials,
+                      )}
                     </TableCell>
                   </TableRow>
                 );

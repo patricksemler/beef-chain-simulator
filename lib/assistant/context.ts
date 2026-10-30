@@ -152,7 +152,7 @@ export function describeResults(result: SimulationSummary) {
     const moneyOut =
       phase.acquisitionCost + phase.directCosts + phase.economicCosts;
     const perAnimal = phase.economicProfit / Math.max(phase.enteredHead, 1);
-    return `  - ${label}: Money in ${currency(moneyIn)} (sales ${currency(phase.revenue)} + ending inventory value ${currency(phase.terminalInventoryValue)}); Money out ${currency(moneyOut)} (buying cattle ${currency(phase.acquisitionCost)} + direct costs ${currency(phase.directCosts)} + overhead ${currency(phase.economicCosts)}); Cash profit ${currency(phase.operatingContribution)}; Total profit ${currency(phase.economicProfit)}; Per animal entering the stage ${currency(perAnimal)}; Margin ${pct(phase.margin)}; Range of outcomes P10 ${currency(phase.p10EconomicProfit)} to P90 ${currency(phase.p90EconomicProfit)}; Chance of a loss ${pct(phase.probabilityOfLoss)}`;
+    return `  - ${label}: Money in ${currency(moneyIn)} (sales ${currency(phase.revenue)} + ending inventory value ${currency(phase.terminalInventoryValue)}); Money out ${currency(moneyOut)} (buying cattle ${currency(phase.acquisitionCost)} + direct costs ${currency(phase.directCosts)} + overhead ${currency(phase.economicCosts)}); Operating profit ${currency(phase.operatingContribution)}; Total profit ${currency(phase.economicProfit)}; Per animal entering the stage ${currency(perAnimal)}; Margin ${pct(phase.margin)}; Range of outcomes P10 ${currency(phase.p10EconomicProfit)} to P90 ${currency(phase.p90EconomicProfit)}; Chance of a loss ${pct(phase.probabilityOfLoss)}`;
   });
   const sensitivityRows = [...result.sensitivity]
     .sort((a, b) => b.swing - a.swing)
@@ -179,7 +179,7 @@ export function describeResults(result: SimulationSummary) {
     '"Profit" tab, headline card:',
     `  - Total profit (headline, median across runs): ${money(result.chainEconomicProfit)}`,
     `  - Range bar under it: P10 ${currency(result.chainP10)} to P90 ${currency(result.chainP90)}`,
-    `  - Cash profit (before overhead): ${money(result.chainOperatingContribution)}`,
+    `  - Operating profit (before overhead): ${money(result.chainOperatingContribution)}`,
     `  - Cattle finished: ${whole(result.completedHead)} (${pct(completedShare)} of calves)`,
     `  - Beef produced: ${whole(result.retailPounds)} lb at retail`,
     `  - Chance of a loss: ${pct(result.chainProbabilityOfLoss)} across ${whole(result.scenario.trials)} runs`,

@@ -46,8 +46,9 @@ export default function TrendsPage() {
         <section className="page-title" aria-labelledby="trends-title">
           <h1 id="trends-title">Market trends</h1>
           <p>
-            USDA annual averages, {FIRST_YEAR} to {LAST_YEAR}. Pick a point in
-            the chain, then a window of years.
+            USDA annual averages, {FIRST_YEAR} to {LAST_YEAR}, in nominal
+            dollars (not adjusted for inflation). Pick a point in the chain,
+            then a window of years.
           </p>
         </section>
 
@@ -55,8 +56,9 @@ export default function TrendsPage() {
 
         <section className="site-section trends-next" aria-label="Next step">
           <p>
-            Any year here can be loaded into the simulator as a complete set of
-            prices and costs, with your own herd on top of it.
+            Choose any of these years under &ldquo;Market year&rdquo; in the
+            simulator to load its prices and costs, with your own herd on top of
+            it.
           </p>
           <a href="/simulator" className="button button-primary">
             Open the simulator

@@ -147,6 +147,9 @@ export interface SensitivityResult {
   label: string;
   lowEconomicProfit: number;
   highEconomicProfit: number;
+  /** Each stage's profit in the same low and high runs. */
+  lowPhaseProfit: Record<PhaseKey, number>;
+  highPhaseProfit: Record<PhaseKey, number>;
   swing: number;
 }
 
@@ -158,6 +161,8 @@ export interface SimulationSummary {
   sensitivity: SensitivityResult[];
   /** Deterministic base-case chain profit the sensitivity swings are measured against. */
   sensitivityBase: number;
+  /** Each stage's profit in that deterministic base case. */
+  sensitivityBasePhases: Record<PhaseKey, number>;
   totalStartedHead: number;
   completedHead: number;
   mortalityHead: number;

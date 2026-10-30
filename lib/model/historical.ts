@@ -85,3 +85,12 @@ export function applyHistoricalYear(
   }
   return next;
 }
+
+/** True when any value the reference year loads has been edited since. */
+export function isEditedFromProfile(scenario: ScenarioInput) {
+  if (!isHistoricalYear(scenario.referenceYear)) return false;
+  return (
+    JSON.stringify(applyHistoricalYear(scenario, scenario.referenceYear)) !==
+    JSON.stringify(scenario)
+  );
+}

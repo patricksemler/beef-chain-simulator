@@ -164,7 +164,7 @@ const baseMetrics: MetricDescriptor[] = [
   },
   {
     id: 'chain_operating_contribution',
-    label: 'Cash profit',
+    label: 'Operating profit',
     unit: '$',
     definition:
       'Chain contribution before overhead (economic) costs: revenue plus ending inventory value, minus acquisition and direct costs.',
