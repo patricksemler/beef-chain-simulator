@@ -31,6 +31,7 @@
  */
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import './globals.css';
 
 const inter = Inter({ variable: '--font-inter', subsets: ['latin'] });
@@ -48,7 +49,11 @@ export default function RootLayout({
   // The font variable must land on <html>: `--font-sans` is declared at :root,
   // so a variable defined only on <body> resolves as invalid there.
   return (
-    <html lang="en" className={inter.variable}>
+    // suppressHydrationWarning: the head script adds `dark` before hydration.
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );

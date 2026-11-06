@@ -66,7 +66,7 @@ export const SERIES: Record<SeriesKey, Series> = {
     product: 'Feed ration',
     unit: '$/ton',
     decimals: 0,
-    color: '#5d5955',
+    color: 'var(--muted-foreground)',
   },
 };
 

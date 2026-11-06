@@ -181,7 +181,7 @@ export function IndexChart({ rows, selected, onSelect }: IndexChartProps) {
                     isOn
                       ? {
                           r: 3.5,
-                          fill: '#fff',
+                          fill: 'var(--surface)',
                           stroke: SERIES[key].color,
                           strokeWidth: 2,
                         }

@@ -80,7 +80,7 @@ export function SelectField({
           if (next !== null) onChange(String(next));
         }}
       >
-        <SelectTrigger id={id} className="w-full bg-white">
+        <SelectTrigger id={id} className="w-full bg-card">
           <SelectValue />
         </SelectTrigger>
         <SelectContent alignItemWithTrigger={false}>
@@ -172,7 +172,7 @@ export function NumberField({
         step={step}
         value={value}
         onValueChange={(next) => onChange(clamp(next, min, max))}
-        className="bg-white tabular-nums"
+        className="bg-card tabular-nums"
       />
     </div>
   );

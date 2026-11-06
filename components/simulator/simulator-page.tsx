@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * # Simulator Page
  *
@@ -36,6 +35,7 @@ import { lazy, Suspense, useCallback, useState } from 'react';
 import { Home, LineChart } from 'lucide-react';
 import { ResultsDashboard } from '@/components/simulator/results';
 import { ScenarioPanel } from '@/components/simulator/scenario-panel';
+import { ThemeToggle } from '@/components/site/theme-toggle';
 import { hasStaleDisplayedResult } from '@/lib/dashboard';
 import type {
   DashboardSnapshot,
@@ -94,18 +94,21 @@ export default function SimulatorPage() {
             </span>
           </h1>
           {/* Plain anchors: the static export has no working client router. */}
-          <nav className="simulator-nav" aria-label="Site">
-            <a href="/">
-              <Home size={15} aria-hidden="true" />
-              <span className="sr-only min-[640px]:not-sr-only">Home</span>
-            </a>
-            <a href="/trends">
-              <LineChart size={15} aria-hidden="true" />
-              <span className="sr-only min-[640px]:not-sr-only">
-                Market trends
-              </span>
-            </a>
-          </nav>
+          <div className="site-header-actions">
+            <nav className="simulator-nav" aria-label="Site">
+              <a href="/">
+                <Home size={15} aria-hidden="true" />
+                <span className="sr-only min-[640px]:not-sr-only">Home</span>
+              </a>
+              <a href="/trends">
+                <LineChart size={15} aria-hidden="true" />
+                <span className="sr-only min-[640px]:not-sr-only">
+                  Market trends
+                </span>
+              </a>
+            </nav>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
       <main className="app-body">

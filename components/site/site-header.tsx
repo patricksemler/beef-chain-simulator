@@ -1,3 +1,5 @@
+import { ThemeToggle } from '@/components/site/theme-toggle';
+
 export type SitePage = 'home' | 'trends' | 'simulator';
 
 const NAV_LINKS: readonly { page: SitePage; href: string; label: string }[] = [
@@ -20,17 +22,20 @@ export function SiteHeader({ current }: { current: SitePage }) {
       >
         Beef Chain Simulator
       </a>
-      <nav className="site-nav" aria-label="Site">
-        {NAV_LINKS.map(({ page, href, label }) => (
-          <a
-            key={page}
-            href={href}
-            aria-current={current === page ? 'page' : undefined}
-          >
-            {label}
-          </a>
-        ))}
-      </nav>
+      <div className="site-header-actions">
+        <nav className="site-nav" aria-label="Site">
+          {NAV_LINKS.map(({ page, href, label }) => (
+            <a
+              key={page}
+              href={href}
+              aria-current={current === page ? 'page' : undefined}
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

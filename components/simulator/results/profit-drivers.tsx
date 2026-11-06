@@ -7,7 +7,7 @@ import { PHASE_META, PHASE_ORDER } from '@/lib/model/phases';
 import type { PhaseKey, SimulationSummary } from '@/lib/model/types';
 
 const LOWER_COLOR = '#b38b5d';
-const HIGHER_COLOR = '#4f6a8a';
+const HIGHER_COLOR = 'var(--driver-higher)';
 
 type Scope = 'chain' | PhaseKey;
 

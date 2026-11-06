@@ -5,7 +5,7 @@ import { getHistoricalProfile, isHistoricalYear } from '@/lib/model/historical';
 import type { GradeKey, SimulationSummary } from '@/lib/model/types';
 
 const GRADE_META: Record<GradeKey, { label: string; color: string }> = {
-  prime: { label: 'Prime', color: '#500000' },
+  prime: { label: 'Prime', color: 'var(--chart-1)' },
   choice: { label: 'Choice', color: '#8f7157' },
   select: { label: 'Select', color: '#c9b59a' },
 };

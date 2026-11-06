@@ -260,7 +260,7 @@ export function ScenarioPanel({
                     Math.min(MAX_HEAD, Math.max(1, Math.round(next))),
                   )
                 }
-                className="bg-white text-lg font-semibold tabular-nums"
+                className="bg-card text-lg font-semibold tabular-nums"
               />
               <div className="pt-0.5">
                 <Slider
@@ -370,7 +370,7 @@ export function ScenarioPanel({
                             ),
                           }))
                         }
-                        className="bg-white px-2 text-sm tabular-nums"
+                        className="bg-card px-2 text-sm tabular-nums"
                       />
                     </div>
                   ))}

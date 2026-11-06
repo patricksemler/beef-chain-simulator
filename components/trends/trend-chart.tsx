@@ -52,7 +52,7 @@ type TrendChartProps = {
 export function TrendChart({ rows, series }: TrendChartProps) {
   const meta = SERIES[series];
   const tickFormatter = (value: number) => formatValue(series, value);
-  const dot = { r: 3.5, fill: '#fff', stroke: meta.color, strokeWidth: 2 };
+  const dot = { r: 3.5, fill: 'var(--surface)', stroke: meta.color, strokeWidth: 2 };
 
   return (
     <figure
