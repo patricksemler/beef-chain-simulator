@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * # Scenario Panel
  *
@@ -48,7 +47,9 @@ import {
   NumericInput,
   PercentField,
   SelectField,
+  UnitInput,
 } from '@/components/simulator/fields';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cloneDefaultScenario, SOURCE_NOTES } from '@/lib/model/defaults';
 import { whole } from '@/lib/model/format';
 import {
@@ -140,6 +141,8 @@ export function ScenarioPanel({
     rerun: boolean;
   } | null>(null);
   const canUndo = undo !== null && undo.after === JSON.stringify(scenario);
+  // Herd & costs shows one stage's six fields at a time instead of all thirty.
+  const [stage, setStage] = useState<PhaseKey>(PHASE_ORDER[0]);
 
   const resetScenario = () => {
     setUndo({
@@ -236,32 +239,28 @@ export function ScenarioPanel({
         <div className="scenario-scroll">
           <div className="space-y-5 px-5 pb-5">
             <div className="space-y-2.5">
-              <div className="flex items-baseline justify-between gap-2">
-                <Label htmlFor="assistant-total-head" className="field-label">
-                  Calves entering
-                </Label>
-                <span className="detail tabular-nums">
-                  {whole(scenario.totalHead)} head
-                </span>
-              </div>
-              <NumericInput
-                id="assistant-total-head"
-                name="totalHead"
-                inputMode="numeric"
-                autoComplete="off"
-                spellCheck={false}
-                min={1}
-                max={MAX_HEAD}
-                step={1}
-                value={scenario.totalHead}
-                onValueChange={(next) =>
-                  updateNumber(
-                    'totalHead',
-                    Math.min(MAX_HEAD, Math.max(1, Math.round(next))),
-                  )
-                }
-                className="bg-card text-lg font-semibold tabular-nums"
-              />
+              <Label htmlFor="assistant-total-head" className="field-label">
+                Calves entering
+                <span className="sr-only">, head</span>
+              </Label>
+              <UnitInput unit="head">
+                <NumericInput
+                  id="assistant-total-head"
+                  name="totalHead"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  spellCheck={false}
+                  format={whole}
+                  value={scenario.totalHead}
+                  onValueChange={(next) =>
+                    updateNumber(
+                      'totalHead',
+                      Math.min(MAX_HEAD, Math.max(1, Math.round(next))),
+                    )
+                  }
+                  className="bg-card text-lg font-semibold tabular-nums"
+                />
+              </UnitInput>
               <div className="pt-0.5">
                 <Slider
                   aria-label="Calves entering, logarithmic scale"
@@ -324,7 +323,9 @@ export function ScenarioPanel({
                 label="Market year"
                 value={String(scenario.referenceYear)}
                 options={YEAR_OPTIONS}
-                onChange={(value) => changeYear(Number(value) as HistoricalYear)}
+                onChange={(value) =>
+                  changeYear(Number(value) as HistoricalYear)
+                }
               />
               <p className="mt-1.5 text-xs text-muted-foreground">
                 {isEditedFromProfile(scenario)
@@ -473,14 +474,14 @@ export function ScenarioPanel({
                     />
                     <PercentField
                       id="grade-prime-premium"
-                      label="Prime vs Choice"
+                      label="Prime premium"
                       value={round(scenario.gradePriceIndex.prime - 1, 4)}
                       max={400}
                       onChange={(value) => updateGradeIndex('prime', 1 + value)}
                     />
                     <PercentField
                       id="grade-select-discount"
-                      label="Select below Choice"
+                      label="Select discount"
                       value={round(1 - scenario.gradePriceIndex.select, 4)}
                       max={99}
                       onChange={(value) =>
@@ -489,10 +490,10 @@ export function ScenarioPanel({
                     />
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Choice is the remaining{' '}
-                    {(scenario.gradeMix.choice * 100).toFixed(1)}%. Prime and
-                    Select sell at Choice prices adjusted by these amounts at
-                    wholesale and retail.
+                    Choice gets the remaining{' '}
+                    {(scenario.gradeMix.choice * 100).toFixed(1)}%. The premium
+                    and discount are relative to the Choice price, at wholesale
+                    and retail.
                   </p>
                 </fieldset>
               </div>
@@ -517,73 +518,83 @@ export function ScenarioPanel({
                     }
                   />
                 </div>
-                {PHASE_ORDER.map((phase) => (
-                  <fieldset
-                    key={phase}
-                    className="phase-group"
-                    aria-labelledby={`${phase}-heading`}
+                <Tabs
+                  value={stage}
+                  onValueChange={(value) => setStage(value as PhaseKey)}
+                  className="gap-4"
+                >
+                  <TabsList
+                    aria-label="Stage"
+                    activateOnFocus
+                    className="stage-tabs"
                   >
-                    <h4 id={`${phase}-heading`} className="phase-legend">
-                      {scenario.phases[phase].label}
-                    </h4>
-                    <div className="field-grid">
-                      <NumberField
-                        id={`${phase}-days`}
-                        label="Days"
-                        value={scenario.phases[phase].durationDays}
-                        onChange={(value) =>
-                          updatePhase(phase, 'durationDays', value)
-                        }
-                      />
-                      <NumberField
-                        id={`${phase}-gain`}
-                        label="Daily gain"
-                        unit="lb"
-                        step={0.01}
-                        value={scenario.phases[phase].averageDailyGain}
-                        onChange={(value) =>
-                          updatePhase(phase, 'averageDailyGain', value)
-                        }
-                      />
-                      <PercentField
-                        id={`${phase}-mortality`}
-                        label="Mortality"
-                        value={scenario.phases[phase].mortalityRate}
-                        onChange={(value) =>
-                          updatePhase(phase, 'mortalityRate', value)
-                        }
-                      />
-                      <NumberField
-                        id={`${phase}-direct-cost`}
-                        label="Direct cost"
-                        unit="$/head"
-                        value={scenario.phases[phase].directCostPerHead}
-                        onChange={(value) =>
-                          updatePhase(phase, 'directCostPerHead', value)
-                        }
-                      />
-                      <NumberField
-                        id={`${phase}-daily-cost`}
-                        label="Daily cost"
-                        unit="$/head"
-                        step={0.01}
-                        value={scenario.phases[phase].dailyCostPerHead}
-                        onChange={(value) =>
-                          updatePhase(phase, 'dailyCostPerHead', value)
-                        }
-                      />
-                      <NumberField
-                        id={`${phase}-economic-cost`}
-                        label="Overhead & land"
-                        unit="$/head"
-                        value={scenario.phases[phase].economicCostPerHead}
-                        onChange={(value) =>
-                          updatePhase(phase, 'economicCostPerHead', value)
-                        }
-                      />
-                    </div>
-                  </fieldset>
-                ))}
+                    {PHASE_ORDER.map((phase) => (
+                      <TabsTrigger key={phase} value={phase}>
+                        {scenario.phases[phase].label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {PHASE_ORDER.map((phase) => (
+                    <TabsContent key={phase} value={phase}>
+                      <div className="field-grid">
+                        <NumberField
+                          id={`${phase}-days`}
+                          label="Days"
+                          value={scenario.phases[phase].durationDays}
+                          onChange={(value) =>
+                            updatePhase(phase, 'durationDays', value)
+                          }
+                        />
+                        <NumberField
+                          id={`${phase}-gain`}
+                          label="Daily gain"
+                          unit="lb"
+                          step={0.01}
+                          value={scenario.phases[phase].averageDailyGain}
+                          onChange={(value) =>
+                            updatePhase(phase, 'averageDailyGain', value)
+                          }
+                        />
+                        <PercentField
+                          id={`${phase}-mortality`}
+                          label="Mortality"
+                          value={scenario.phases[phase].mortalityRate}
+                          onChange={(value) =>
+                            updatePhase(phase, 'mortalityRate', value)
+                          }
+                        />
+                        <NumberField
+                          id={`${phase}-direct-cost`}
+                          label="Direct cost"
+                          unit="$/head"
+                          value={scenario.phases[phase].directCostPerHead}
+                          onChange={(value) =>
+                            updatePhase(phase, 'directCostPerHead', value)
+                          }
+                        />
+                        <NumberField
+                          id={`${phase}-daily-cost`}
+                          label="Daily cost"
+                          unit="$/head"
+                          step={0.01}
+                          value={scenario.phases[phase].dailyCostPerHead}
+                          onChange={(value) =>
+                            updatePhase(phase, 'dailyCostPerHead', value)
+                          }
+                        />
+                        <NumberField
+                          id={`${phase}-economic-cost`}
+                          label="Overhead & land"
+                          unit="$/head"
+                          value={scenario.phases[phase].economicCostPerHead}
+                          onChange={(value) =>
+                            updatePhase(phase, 'economicCostPerHead', value)
+                          }
+                        />
+                      </div>
+                    </TabsContent>
+                  ))}
+                </Tabs>
               </div>
             </Section>
 

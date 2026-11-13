@@ -1,6 +1,5 @@
 'use client';
 
-
 /**
  * # Fields
  *
@@ -105,23 +104,36 @@ export function SelectField({
 export function NumericInput({
   value,
   onValueChange,
+  format,
   ...props
 }: Omit<ComponentProps<typeof Input>, 'value' | 'onChange' | 'type'> & {
   value: number;
   onValueChange: (value: number) => void;
+  /**
+   * Shows the committed value formatted (for example with thousands
+   * separators). A number input cannot display commas, so a formatted field
+   * is a text input that ignores separators when it parses what was typed.
+   */
+  format?: (value: number) => string;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
+  const shown = Number.isFinite(value)
+    ? format
+      ? format(value)
+      : String(value)
+    : '0';
 
   return (
     <Input
       {...props}
-      type="number"
-      value={draft ?? (Number.isFinite(value) ? String(value) : '0')}
+      type={format ? 'text' : 'number'}
+      value={draft ?? shown}
       onChange={(event) => {
         const raw = event.target.value;
         setDraft(raw);
-        if (raw.trim() === '') return;
-        const next = Number(raw);
+        const cleaned = format ? raw.replace(/[,\s]/g, '') : raw;
+        if (cleaned.trim() === '') return;
+        const next = Number(cleaned);
         if (Number.isFinite(next)) onValueChange(next);
       }}
       onBlur={(event) => {
@@ -133,8 +145,34 @@ export function NumericInput({
 }
 
 /**
- * A labelled numeric field. `unit` is rendered inside the label so it is part
- * of the accessible name instead of being a decorative overlay.
+ * Wraps an input so its unit sits inside the box, right after the number,
+ * instead of in the label where long names pushed it onto a second line. The
+ * visible unit is decorative; the label carries it for screen readers.
+ */
+export function UnitInput({
+  unit,
+  children,
+}: {
+  unit?: string;
+  children: React.ReactNode;
+}) {
+  if (!unit) return <>{children}</>;
+  return (
+    <div
+      className="field-control"
+      style={{ '--unit-ch': unit.length } as React.CSSProperties}
+    >
+      {children}
+      <span className="field-suffix" aria-hidden="true">
+        {unit}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * A labelled numeric field. `unit` shows inside the input and is also in the
+ * label (visually hidden) so it stays part of the accessible name.
  */
 export function NumberField({
   id,
@@ -159,21 +197,23 @@ export function NumberField({
     <div className="field">
       <Label htmlFor={id} className="field-label">
         {label}
-        {unit ? <span className="field-unit">{unit}</span> : null}
+        {unit ? <span className="sr-only">, {unit}</span> : null}
       </Label>
-      <NumericInput
-        id={id}
-        name={id}
-        inputMode="decimal"
-        autoComplete="off"
-        spellCheck={false}
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onValueChange={(next) => onChange(clamp(next, min, max))}
-        className="bg-card tabular-nums"
-      />
+      <UnitInput unit={unit}>
+        <NumericInput
+          id={id}
+          name={id}
+          inputMode="decimal"
+          autoComplete="off"
+          spellCheck={false}
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onValueChange={(next) => onChange(clamp(next, min, max))}
+          className="bg-card tabular-nums"
+        />
+      </UnitInput>
     </div>
   );
 }
