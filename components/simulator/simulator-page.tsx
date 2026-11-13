@@ -34,6 +34,7 @@
 import { lazy, Suspense, useCallback, useState } from 'react';
 import { ResultsDashboard } from '@/components/simulator/results';
 import { ScenarioPanel } from '@/components/simulator/scenario-panel';
+import { HelpPopoverProvider } from '@/components/simulator/help-popover';
 import { SiteHeader } from '@/components/site/site-header';
 import { hasStaleDisplayedResult } from '@/lib/dashboard';
 import type {
@@ -85,7 +86,8 @@ export default function SimulatorPage() {
         Skip to results
       </a>
       <SiteHeader current="simulator" wide />
-      <main className="app-body">
+      <HelpPopoverProvider>
+        <main className="app-body">
         <h1 className="sr-only">Beef Chain Simulator</h1>
         <ScenarioPanel
           scenario={simulation.scenario}
@@ -107,7 +109,8 @@ export default function SimulatorPage() {
             onActivePageChange={setActiveResultsPage}
           />
         </div>
-      </main>
+        </main>
+      </HelpPopoverProvider>
 
       <Suspense fallback={null}>
         <AssistantWidget

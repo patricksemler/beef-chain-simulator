@@ -34,6 +34,7 @@
 import { useState, type ComponentProps } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { HelpPopover } from '@/components/simulator/help-popover';
 import {
   Select,
   SelectContent,
@@ -56,21 +57,26 @@ export interface SelectOption {
 export function SelectField({
   id,
   label,
+  helpText,
   value,
   options,
   onChange,
 }: {
   id: string;
   label: string;
+  helpText: string;
   value: string;
   options: readonly SelectOption[];
   onChange: (value: string) => void;
 }) {
   return (
     <div className="field">
-      <Label htmlFor={id} className="field-label">
-        {label}
-      </Label>
+      <div className="flex items-center gap-1.5">
+        <Label htmlFor={id} className="field-label">
+          {label}
+        </Label>
+        <HelpPopover id={id} title={label} description={helpText} />
+      </div>
       <Select
         name={id}
         value={value}
@@ -177,6 +183,7 @@ export function UnitInput({
 export function NumberField({
   id,
   label,
+  helpText,
   unit,
   value,
   min = 0,
@@ -186,6 +193,7 @@ export function NumberField({
 }: {
   id: string;
   label: string;
+  helpText: string;
   unit?: string;
   value: number;
   min?: number;
@@ -195,10 +203,13 @@ export function NumberField({
 }) {
   return (
     <div className="field">
-      <Label htmlFor={id} className="field-label">
-        {label}
-        {unit ? <span className="sr-only">, {unit}</span> : null}
-      </Label>
+      <div className="flex items-center gap-1.5">
+        <Label htmlFor={id} className="field-label">
+          {label}
+          {unit ? <span className="sr-only">, {unit}</span> : null}
+        </Label>
+        <HelpPopover id={id} title={label} description={helpText} />
+      </div>
       <UnitInput unit={unit}>
         <NumericInput
           id={id}
@@ -222,6 +233,7 @@ export function NumberField({
 export function PercentField({
   id,
   label,
+  helpText,
   value,
   max = 100,
   step = 0.1,
@@ -229,6 +241,7 @@ export function PercentField({
 }: {
   id: string;
   label: string;
+  helpText: string;
   value: number;
   max?: number;
   step?: number;
@@ -238,6 +251,7 @@ export function PercentField({
     <NumberField
       id={id}
       label={label}
+      helpText={helpText}
       unit="%"
       value={round(value * 100, 4)}
       min={0}

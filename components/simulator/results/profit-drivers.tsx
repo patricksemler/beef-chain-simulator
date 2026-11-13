@@ -76,6 +76,7 @@ export function ProfitDrivers({ result }: { result: SimulationSummary }) {
         <SelectField
           id="drivers-scope"
           label="Profit for"
+          helpText="Choose the supply-chain stage whose inputs are compared for their effect on profit."
           value={scope}
           options={SCOPE_OPTIONS}
           onChange={(value) => setScope(value as Scope)}

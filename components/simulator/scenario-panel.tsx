@@ -42,6 +42,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { HelpPopover } from '@/components/simulator/help-popover';
 import {
   NumberField,
   NumericInput,
@@ -225,24 +226,38 @@ export function ScenarioPanel({
       <div className="scenario-rail-inner">
         <header className="flex items-baseline justify-between gap-3 px-5 pt-5 pb-4">
           <h2 className="rail-title">Scenario</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-mr-2 h-9 gap-1.5 px-2.5 text-[0.9375rem] text-muted-foreground hover:text-[var(--ink)]"
-            onClick={canUndo ? undoLastChange : resetScenario}
-          >
-            <Undo2 className="size-3.5" aria-hidden="true" />
-            {canUndo ? undo.label : 'Reset'}
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-mr-2 h-9 gap-1.5 px-2.5 text-[0.9375rem] text-muted-foreground hover:text-[var(--ink)]"
+              onClick={canUndo ? undoLastChange : resetScenario}
+            >
+              <Undo2 className="size-3.5" aria-hidden="true" />
+              {canUndo ? undo.label : 'Reset'}
+            </Button>
+            <HelpPopover
+              id="reset"
+              title="Reset"
+              description="Restore default inputs, or undo the last bulk change when available."
+            />
+          </div>
         </header>
 
         <div className="scenario-scroll">
           <div className="space-y-5 px-5 pb-5">
             <div className="space-y-2.5">
-              <Label htmlFor="assistant-total-head" className="field-label">
-                Calves entering
-                <span className="sr-only">, head</span>
-              </Label>
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="assistant-total-head" className="field-label">
+                  Calves entering
+                  <span className="sr-only">, head</span>
+                </Label>
+                <HelpPopover
+                  id="total-head"
+                  title="Calves entering"
+                  description="Set how many calves start the supply chain. The slider uses a logarithmic scale."
+                />
+              </div>
               <UnitInput unit="head">
                 <NumericInput
                   id="assistant-total-head"
@@ -297,6 +312,7 @@ export function ScenarioPanel({
               <SelectField
                 id="horizon"
                 label="Time period"
+                helpText="Choose how many months the model follows the cattle and market."
                 value={String(scenario.horizonMonths)}
                 options={HORIZON_OPTIONS}
                 onChange={(value) =>
@@ -306,6 +322,7 @@ export function ScenarioPanel({
               <SelectField
                 id="cadence"
                 label="When calves enter"
+                helpText="Choose whether calves enter evenly, all at once, by season, or using monthly weights."
                 value={scenario.cadence}
                 options={CADENCE_OPTIONS}
                 onChange={(value) =>
@@ -321,6 +338,7 @@ export function ScenarioPanel({
               <SelectField
                 id="reference-year"
                 label="Market year"
+                helpText="Load market prices and production assumptions from the selected USDA year."
                 value={String(scenario.referenceYear)}
                 options={YEAR_OPTIONS}
                 onChange={(value) =>
@@ -339,9 +357,16 @@ export function ScenarioPanel({
                 className="phase-group"
                 aria-labelledby="monthly-weights"
               >
-                <h4 id="monthly-weights" className="phase-legend">
-                  Monthly weights
-                </h4>
+                <div className="flex items-center gap-1.5">
+                  <h4 id="monthly-weights" className="phase-legend">
+                    Monthly weights
+                  </h4>
+                  <HelpPopover
+                    id="monthly-weights"
+                    title="Monthly weights"
+                    description="Set each month's share of calf entries. Larger weights place more calves in that month."
+                  />
+                </div>
                 <div className="grid grid-cols-4 gap-2">
                   {MONTH_LABELS.map((month, index) => (
                     <div key={month}>
@@ -393,6 +418,7 @@ export function ScenarioPanel({
                   <NumberField
                     id="calf-price"
                     label="Weaned calf"
+                    helpText="Sale price for calves leaving the cow-calf phase, per hundredweight."
                     unit="$/cwt"
                     value={scenario.calfPricePerCwt}
                     onChange={(value) => updateNumber('calfPricePerCwt', value)}
@@ -400,6 +426,7 @@ export function ScenarioPanel({
                   <NumberField
                     id="feeder-price"
                     label="Feeder cattle"
+                    helpText="Purchase or transfer price for feeder cattle, per hundredweight."
                     unit="$/cwt"
                     value={scenario.feederPricePerCwt}
                     onChange={(value) =>
@@ -409,6 +436,7 @@ export function ScenarioPanel({
                   <NumberField
                     id="fed-price"
                     label="Fed cattle"
+                    helpText="Sale price for finished cattle, per hundredweight."
                     unit="$/cwt"
                     value={scenario.fedPricePerCwt}
                     onChange={(value) => updateNumber('fedPricePerCwt', value)}
@@ -416,6 +444,7 @@ export function ScenarioPanel({
                   <NumberField
                     id="wholesale-price"
                     label="Wholesale beef (Choice)"
+                    helpText="Wholesale beef price for Choice-grade carcasses, per pound."
                     unit="$/lb"
                     step={0.01}
                     value={scenario.wholesalePricePerLb}
@@ -426,6 +455,7 @@ export function ScenarioPanel({
                   <NumberField
                     id="retail-price"
                     label="Retail beef (Choice)"
+                    helpText="Retail beef price for Choice-grade cuts, per pound."
                     unit="$/lb"
                     step={0.01}
                     value={scenario.retailPricePerLb}
@@ -436,6 +466,7 @@ export function ScenarioPanel({
                   <NumberField
                     id="feed-cost"
                     label="Feed"
+                    helpText="Feed price per ton of dry matter."
                     unit="$/ton"
                     value={scenario.feedCostPerTon}
                     onChange={(value) => updateNumber('feedCostPerTon', value)}
@@ -443,6 +474,7 @@ export function ScenarioPanel({
                   <NumberField
                     id="byproduct-credit"
                     label="Byproduct"
+                    helpText="Additional packer revenue credited per head from byproducts."
                     unit="$/head"
                     value={scenario.byproductCreditPerHead}
                     onChange={(value) =>
@@ -461,6 +493,7 @@ export function ScenarioPanel({
                     <PercentField
                       id="grade-prime-share"
                       label="Prime share"
+                      helpText="Share of cattle grading Prime. Choice receives the remaining share after Prime and Select."
                       value={scenario.gradeMix.prime}
                       max={round((1 - scenario.gradeMix.select) * 100, 2)}
                       onChange={(value) => updateGradeShare('prime', value)}
@@ -468,6 +501,7 @@ export function ScenarioPanel({
                     <PercentField
                       id="grade-select-share"
                       label="Select share"
+                      helpText="Share of cattle grading Select. Choice receives the remaining share after Prime and Select."
                       value={scenario.gradeMix.select}
                       max={round((1 - scenario.gradeMix.prime) * 100, 2)}
                       onChange={(value) => updateGradeShare('select', value)}
@@ -475,6 +509,7 @@ export function ScenarioPanel({
                     <PercentField
                       id="grade-prime-premium"
                       label="Prime premium"
+                      helpText="Price premium for Prime relative to the Choice price."
                       value={round(scenario.gradePriceIndex.prime - 1, 4)}
                       max={400}
                       onChange={(value) => updateGradeIndex('prime', 1 + value)}
@@ -482,6 +517,7 @@ export function ScenarioPanel({
                     <PercentField
                       id="grade-select-discount"
                       label="Select discount"
+                      helpText="Price discount for Select relative to the Choice price."
                       value={round(1 - scenario.gradePriceIndex.select, 4)}
                       max={99}
                       onChange={(value) =>
@@ -505,6 +541,7 @@ export function ScenarioPanel({
                   <NumberField
                     id="start-weight"
                     label="Start weight"
+                    helpText="Average calf weight when it enters the model."
                     unit="lb"
                     value={scenario.startWeight}
                     onChange={(value) => updateNumber('startWeight', value)}
@@ -512,6 +549,7 @@ export function ScenarioPanel({
                   <PercentField
                     id="biological-variation"
                     label="Animal variation"
+                    helpText="Spread in animal performance around the average; higher values widen outcomes."
                     value={scenario.biologicalVariation}
                     onChange={(value) =>
                       updateNumber('biologicalVariation', value)
@@ -534,12 +572,18 @@ export function ScenarioPanel({
                       </TabsTrigger>
                     ))}
                   </TabsList>
+                  <HelpPopover
+                    id="stage-selector"
+                    title="Production stage"
+                    description="Choose a stage to edit its duration, weight gain, mortality, and costs."
+                  />
                   {PHASE_ORDER.map((phase) => (
                     <TabsContent key={phase} value={phase}>
                       <div className="field-grid">
                         <NumberField
                           id={`${phase}-days`}
                           label="Days"
+                          helpText="Number of days cattle spend in this production stage."
                           value={scenario.phases[phase].durationDays}
                           onChange={(value) =>
                             updatePhase(phase, 'durationDays', value)
@@ -548,6 +592,7 @@ export function ScenarioPanel({
                         <NumberField
                           id={`${phase}-gain`}
                           label="Daily gain"
+                          helpText="Average live-weight gain per animal per day in this stage."
                           unit="lb"
                           step={0.01}
                           value={scenario.phases[phase].averageDailyGain}
@@ -558,6 +603,7 @@ export function ScenarioPanel({
                         <PercentField
                           id={`${phase}-mortality`}
                           label="Mortality"
+                          helpText="Share of animals expected to die during this stage."
                           value={scenario.phases[phase].mortalityRate}
                           onChange={(value) =>
                             updatePhase(phase, 'mortalityRate', value)
@@ -566,6 +612,7 @@ export function ScenarioPanel({
                         <NumberField
                           id={`${phase}-direct-cost`}
                           label="Direct cost"
+                          helpText="One-time operating cost per head for this stage."
                           unit="$/head"
                           value={scenario.phases[phase].directCostPerHead}
                           onChange={(value) =>
@@ -575,6 +622,7 @@ export function ScenarioPanel({
                         <NumberField
                           id={`${phase}-daily-cost`}
                           label="Daily cost"
+                          helpText="Operating cost per head for each day in this stage."
                           unit="$/head"
                           step={0.01}
                           value={scenario.phases[phase].dailyCostPerHead}
@@ -585,6 +633,7 @@ export function ScenarioPanel({
                         <NumberField
                           id={`${phase}-economic-cost`}
                           label="Overhead & land"
+                          helpText="Other costs allocated per head, excluding daily and direct costs."
                           unit="$/head"
                           value={scenario.phases[phase].economicCostPerHead}
                           onChange={(value) =>
@@ -603,6 +652,7 @@ export function ScenarioPanel({
                 <PercentField
                   id="dressing"
                   label="Dressing yield"
+                  helpText="Carcass weight as a share of live weight at slaughter."
                   value={scenario.dressingPercentage}
                   onChange={(value) =>
                     updateNumber('dressingPercentage', value)
@@ -611,12 +661,14 @@ export function ScenarioPanel({
                 <PercentField
                   id="saleable-yield"
                   label="Saleable yield"
+                  helpText="Saleable beef as a share of carcass weight."
                   value={scenario.saleableYield}
                   onChange={(value) => updateNumber('saleableYield', value)}
                 />
                 <NumberField
                   id="feed-intake"
                   label="Feed intake"
+                  helpText="Average dry-matter feed consumed per animal each day."
                   unit="lb/day"
                   step={0.1}
                   value={scenario.feedDryMatterLbPerDay}
@@ -627,6 +679,7 @@ export function ScenarioPanel({
                 <PercentField
                   id="cattle-trend"
                   label="Cattle price trend"
+                  helpText="Annual change applied to cattle prices over the selected time period."
                   value={scenario.annualCattlePriceTrend}
                   max={50}
                   onChange={(value) =>
@@ -636,6 +689,7 @@ export function ScenarioPanel({
                 <PercentField
                   id="wholesale-trend"
                   label="Wholesale price trend"
+                  helpText="Annual change applied to wholesale beef prices over time."
                   value={scenario.annualWholesalePriceTrend}
                   max={50}
                   onChange={(value) =>
@@ -645,6 +699,7 @@ export function ScenarioPanel({
                 <PercentField
                   id="retail-trend"
                   label="Retail price trend"
+                  helpText="Annual change applied to retail beef prices over time."
                   value={scenario.annualRetailPriceTrend}
                   max={50}
                   onChange={(value) =>
@@ -654,6 +709,7 @@ export function ScenarioPanel({
                 <PercentField
                   id="feed-trend"
                   label="Feed cost trend"
+                  helpText="Annual change applied to feed costs over time."
                   value={scenario.annualFeedCostTrend}
                   max={50}
                   onChange={(value) =>
@@ -672,42 +728,49 @@ export function ScenarioPanel({
                 <PercentField
                   id="calf-volatility"
                   label="Calf price swing"
+                  helpText="Expected variation in weaned calf prices between simulation runs."
                   value={scenario.marketRisk.calfVolatility}
                   onChange={(value) => updateRisk('calfVolatility', value)}
                 />
                 <PercentField
                   id="feeder-volatility"
                   label="Feeder price swing"
+                  helpText="Expected variation in feeder cattle prices between simulation runs."
                   value={scenario.marketRisk.feederVolatility}
                   onChange={(value) => updateRisk('feederVolatility', value)}
                 />
                 <PercentField
                   id="fed-volatility"
                   label="Fed price swing"
+                  helpText="Expected variation in fed cattle prices between simulation runs."
                   value={scenario.marketRisk.fedVolatility}
                   onChange={(value) => updateRisk('fedVolatility', value)}
                 />
                 <PercentField
                   id="wholesale-volatility"
                   label="Wholesale price swing"
+                  helpText="Expected variation in wholesale beef prices between simulation runs."
                   value={scenario.marketRisk.wholesaleVolatility}
                   onChange={(value) => updateRisk('wholesaleVolatility', value)}
                 />
                 <PercentField
                   id="retail-volatility"
                   label="Retail price swing"
+                  helpText="Expected variation in retail beef prices between simulation runs."
                   value={scenario.marketRisk.retailVolatility}
                   onChange={(value) => updateRisk('retailVolatility', value)}
                 />
                 <PercentField
                   id="feed-volatility"
                   label="Feed cost swing"
+                  helpText="Expected variation in feed costs between simulation runs."
                   value={scenario.marketRisk.feedVolatility}
                   onChange={(value) => updateRisk('feedVolatility', value)}
                 />
                 <NumberField
                   id="market-correlation"
                   label="Correlation"
+                  helpText="How strongly price and feed-cost changes move together. Higher values link their swings more closely."
                   value={scenario.marketRisk.commonMarketCorrelation}
                   min={0}
                   max={1}
@@ -724,6 +787,7 @@ export function ScenarioPanel({
                 <SelectField
                   id="trials"
                   label="Runs"
+                  helpText="Number of simulated outcomes. More runs improve stability but take longer."
                   value={String(scenario.trials)}
                   options={TRIAL_OPTIONS}
                   onChange={(value) => updateNumber('trials', Number(value))}
@@ -731,6 +795,7 @@ export function ScenarioPanel({
                 <NumberField
                   id="random-seed"
                   label="Random seed"
+                  helpText="Sets the random sequence so runs can be repeated with the same inputs."
                   value={scenario.seed}
                   onChange={(value) => updateNumber('seed', Math.round(value))}
                 />
@@ -776,21 +841,28 @@ export function ScenarioPanel({
             ) : null}
           </div>
 
-          <Button
-            className="run-button"
-            onClick={run}
-            disabled={isRunning}
-            data-stale={isStale ? '' : undefined}
-          >
-            {isRunning ? (
-              'Working on it…'
-            ) : (
-              <>
-                <Play className="size-4 fill-current" aria-hidden="true" />
-                {isStale ? 'Update results' : 'Run simulation'}
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              className="run-button"
+              onClick={run}
+              disabled={isRunning}
+              data-stale={isStale ? '' : undefined}
+            >
+              {isRunning ? (
+                'Working on it?'
+              ) : (
+                <>
+                  <Play className="size-4 fill-current" aria-hidden="true" />
+                  {isStale ? 'Update results' : 'Run simulation'}
+                </>
+              )}
+            </Button>
+            <HelpPopover
+              id="run-simulation"
+              title="Run simulation"
+              description="Calculate results from the current inputs, or refresh stale results."
+            />
+          </div>
         </footer>
       </div>
     </aside>
