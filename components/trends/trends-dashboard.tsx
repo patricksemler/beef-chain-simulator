@@ -131,10 +131,8 @@ export function TrendsDashboard() {
             <span className="trend-unit">{first.year} = 100</span>
           </h2>
           <p className="trend-note">
-            Every series rebased to the same starting point, so moves in $/cwt,
-            $/lb and $/ton can be compared directly. Nominal dollars; change
-            &ldquo;From&rdquo; to rebase. Hover a line to identify it; click to
-            select it.
+            Each series starts at 100 in {first.year}, so prices in different
+            units can be compared directly.
           </p>
         </div>
 

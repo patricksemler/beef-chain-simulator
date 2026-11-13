@@ -193,14 +193,14 @@ export function describeResults(result: SimulationSummary) {
     '',
     '"Cattle flow" tab:',
     `  - ${whole(result.totalStartedHead)} calves in`,
-    `  - Current chain status: Completed ${pct(completedShare)}; Still in chain ${pct(result.endingInventoryHead / entered)}; Mortality ${pct(result.mortalityHead / entered)}`,
+    `  - Chain status: Completed ${pct(completedShare)}; Still in chain ${pct(result.endingInventoryHead / entered)}; Mortality ${pct(result.mortalityHead / entered)}`,
     ...flowRows,
     `  - Calf to retail: ${whole(journeyDays)} days; Finished weight: ${whole(result.phases.feedlot.averageExitWeight)} lb; Beef per animal sold: ${whole(result.completedHead > 0 ? result.retailPounds / result.completedHead : 0)} lb; Died: ${whole(result.mortalityHead)}`,
-    '  - "What happened at each stage" card:',
+    '  - "By stage" chart in the "Cattle flow" card:',
     ...outcomeRows.map((row) => `  ${row}`),
     `  - "Calf-to-retail timeline" card: the journey takes about ${journeyMonths.toFixed(1)} months against a ${result.scenario.horizonMonths}-month period, so ${lastEntryMonth > 0 ? `only calves entering in roughly the first ${lastEntryMonth} month(s) can reach retail` : 'no calves can reach retail'} before the period ends`,
     '',
-    '"Stage details" tab (the user picks one stage; the panel shows its profit, per-animal profit, margin, chance of a loss, range of outcomes, a profit bridge, cost mix, and a cost-pressure chart, then a table of all stages):',
+    '"Stage details" tab (the user picks one stage; the panel shows its profit, per-animal profit, margin, chance of a loss, range of outcomes, a profit bridge and cost mix, then a table of all stages):',
     ...stageRows,
     '  - "Where retail profit comes from" card (shown when Retail is picked; Prime and Select retail prices are estimates, since USDA publishes retail prices for Choice only):',
     ...gradeRows,
@@ -231,7 +231,7 @@ export function describeDashboard(snapshot: DashboardSnapshot) {
   if (result && snapshot.isStale) {
     const differences = describeScenarioDifferences(draft, result.scenario);
     status.push(
-      '- STALE: the user edited inputs after the displayed results were produced and has not pressed "Run Simulation" yet. The results below still reflect the previous inputs. Edited inputs (displayed → current):',
+      '- STALE: the user edited inputs after the displayed results were produced and has not pressed "Run simulation" yet. The results below still reflect the previous inputs. Edited inputs (displayed → current):',
       ...(differences.length
         ? differences
         : ['  - (no visible field differs)']),

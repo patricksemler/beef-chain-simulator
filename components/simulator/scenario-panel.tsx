@@ -321,15 +321,15 @@ export function ScenarioPanel({
             <div>
               <SelectField
                 id="reference-year"
-                label="Market year (USDA prices and costs)"
+                label="Market year"
                 value={String(scenario.referenceYear)}
                 options={YEAR_OPTIONS}
                 onChange={(value) => changeYear(Number(value) as HistoricalYear)}
               />
               <p className="mt-1.5 text-xs text-muted-foreground">
                 {isEditedFromProfile(scenario)
-                  ? `Edited from the ${scenario.referenceYear} profile. Choosing a year replaces prices, grade mix, dressing yield, and stage costs.`
-                  : 'Choosing a year replaces prices, grade mix, dressing yield, and stage costs.'}
+                  ? `Edited from the ${scenario.referenceYear} USDA profile. Picking a year reloads its prices, grade mix, yields, and stage costs.`
+                  : 'Loads that year’s USDA prices, grade mix, yields, and stage costs.'}
               </p>
             </div>
 
@@ -776,7 +776,7 @@ export function ScenarioPanel({
             ) : (
               <>
                 <Play className="size-4 fill-current" aria-hidden="true" />
-                {isStale ? 'Update results' : 'Run Simulation'}
+                {isStale ? 'Update results' : 'Run simulation'}
               </>
             )}
           </Button>

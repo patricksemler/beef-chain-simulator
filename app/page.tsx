@@ -86,11 +86,6 @@ export default function Home() {
         <section className="site-section" aria-label="The beef chain">
           <ChainSketch />
           <ChainLedger />
-          <p className="ledger-more">
-            <a href="/trends">
-              Every year since {FIRST_YEAR}, series by series
-            </a>
-          </p>
         </section>
 
         <section
@@ -99,14 +94,9 @@ export default function Home() {
         >
           <h2 id="capabilities-title">What the model does</h2>
           <dl className="capabilities-list">
-            {CAPABILITIES.map(({ title, body }, index) => (
+            {CAPABILITIES.map(({ title, body }) => (
               <div key={title}>
-                <dt>
-                  <span className="capability-number" aria-hidden="true">
-                    {index + 1}
-                  </span>
-                  {title}
-                </dt>
+                <dt>{title}</dt>
                 <dd>{body}</dd>
               </div>
             ))}

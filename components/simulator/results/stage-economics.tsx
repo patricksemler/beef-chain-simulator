@@ -3,14 +3,14 @@
 import { useMemo } from 'react';
 import { GradeBreakdown } from '@/components/simulator/results/grade-breakdown';
 import { PHASE_META } from '@/lib/model/phases';
-import { compactCurrency, currency, percent } from '@/lib/model/format';
+import { compactCurrency, currency } from '@/lib/model/format';
 import type {
   PhaseKey,
   PhaseResult,
   SimulationSummary,
 } from '@/lib/model/types';
 
-const STAGE_STORY: Record<
+export const STAGE_STORY: Record<
   PhaseKey,
   { source: string; work: string; output: string }
 > = {
@@ -60,7 +60,6 @@ export function StageEconomics({
   selectedKey: PhaseKey;
 }) {
   const phase = result.phases[selectedKey];
-  const story = STAGE_STORY[selectedKey];
 
   const bridge = useMemo<BridgeRow[]>(
     () => [
@@ -98,27 +97,21 @@ export function StageEconomics({
   const steps = bridge.map((row, index) => {
     const start =
       row.kind === 'cost'
-        ? bridge.slice(0, index).reduce((sum, earlier) => sum + earlier.value, 0)
+        ? bridge
+            .slice(0, index)
+            .reduce((sum, earlier) => sum + earlier.value, 0)
         : 0;
     return { ...row, start, end: start + row.value };
   });
-  const lowest = Math.min(0, ...steps.flatMap((step) => [step.start, step.end]));
+  const lowest = Math.min(
+    0,
+    ...steps.flatMap((step) => [step.start, step.end]),
+  );
   const highest = Math.max(
     ...steps.flatMap((step) => [step.start, step.end]),
     lowest + 1,
   );
-  const at = (value: number) =>
-    ((value - lowest) / (highest - lowest)) * 100;
-  const controllableCosts = phase.directCosts + phase.economicCosts;
-  const sensitivity = [-10, 0, 10].map((change) => ({
-    change,
-    profit: perHead(
-      phase.economicProfit - controllableCosts * (change / 100),
-      phase,
-    ),
-  }));
-  const cushion =
-    controllableCosts > 0 ? phase.economicProfit / controllableCosts : null;
+  const at = (value: number) => ((value - lowest) / (highest - lowest)) * 100;
   const expenseTotal = Math.max(
     phase.acquisitionCost + phase.directCosts + phase.economicCosts,
     1,
@@ -143,140 +136,79 @@ export function StageEconomics({
 
   return (
     <div className="stage-economics">
-      <div className="stage-story" aria-live="polite">
-        <div>
-          <span className="label">Money comes from</span>
-          <strong>{story.source}</strong>
-        </div>
-        <div>
-          <span className="label">This stage pays for</span>
-          <strong>{story.work}</strong>
-        </div>
-        <div>
-          <span className="label">What moves forward</span>
-          <strong>{story.output}</strong>
-        </div>
-      </div>
-
-      <div className="stage-visual-grid">
-        <div className="stage-visual">
-          <div className="stage-visual-heading">
-            <div>
-              <h4>Profit bridge</h4>
-              <p>Typical dollars per animal entering this stage</p>
-            </div>
+      <div className="stage-visual">
+        <div className="stage-visual-heading">
+          <div>
+            <h4>Profit bridge</h4>
+            <p>Typical dollars per animal entering this stage</p>
           </div>
-          <div className="profit-bridge">
-            {steps.map((row) => (
-              <div key={row.label} className="profit-bridge-row">
-                <span>{row.label}</span>
-                <div
-                  className="profit-bridge-track"
-                  style={{ '--zero': `${at(0)}%` } as React.CSSProperties}
-                  aria-hidden="true"
-                >
-                  <span
-                    data-kind={row.kind}
-                    data-negative={row.value < 0}
-                    style={{
-                      left: `${at(Math.min(row.start, row.end))}%`,
-                      width: `${Math.abs(at(row.end) - at(row.start))}%`,
-                    }}
-                  />
-                </div>
-                <strong
-                  className={
-                    row.kind === 'profit' && row.value < 0 ? 'negative' : ''
-                  }
-                >
-                  {currency(row.value)}
-                </strong>
-              </div>
-            ))}
-          </div>
-
-          <div className="expense-mix">
-            <div className="expense-mix-head">
-              <span className="label">Where every cost dollar goes</span>
-              <span className="detail">
-                {compactCurrency(expenseTotal)} total
-              </span>
-            </div>
-            <div
-              className="expense-mix-bar"
-              aria-label={expenseMix
-                .map(
-                  (item) =>
-                    `${item.label}: ${Math.round((item.value / expenseTotal) * 100)}%`,
-                )
-                .join('; ')}
-            >
-              {expenseMix.map((item) => (
+        </div>
+        <div className="profit-bridge">
+          {steps.map((row) => (
+            <div key={row.label} className="profit-bridge-row">
+              <span>{row.label}</span>
+              <div
+                className="profit-bridge-track"
+                style={{ '--zero': `${at(0)}%` } as React.CSSProperties}
+                aria-hidden="true"
+              >
                 <span
-                  key={item.label}
+                  data-kind={row.kind}
+                  data-negative={row.value < 0}
                   style={{
-                    width: `${(item.value / expenseTotal) * 100}%`,
-                    background: item.color,
+                    left: `${at(Math.min(row.start, row.end))}%`,
+                    width: `${Math.abs(at(row.end) - at(row.start))}%`,
                   }}
                 />
-              ))}
+              </div>
+              <strong
+                className={
+                  row.kind === 'profit' && row.value < 0 ? 'negative' : ''
+                }
+              >
+                {currency(row.value)}
+              </strong>
             </div>
-            <ul className="expense-mix-key">
-              {expenseMix.map((item) => (
-                <li key={item.label}>
-                  <span style={{ background: item.color }} aria-hidden="true" />
-                  {item.label}
-                  <strong>
-                    {Math.round((item.value / expenseTotal) * 100)}%
-                  </strong>
-                </li>
-              ))}
-            </ul>
-          </div>
+          ))}
         </div>
 
-        <div className="stage-visual">
-          <div className="stage-visual-heading">
-            <div>
-              <h4>Cost pressure</h4>
-              <p>Profit if operating and overhead costs move together</p>
-            </div>
-          </div>
-          {cushion !== null ? (
-            <p className="cost-pressure-headline">
-              {cushion >= 0 ? (
-                <>
-                  Costs could rise <strong>{percent(cushion)}</strong> before
-                  this stage loses money.
-                </>
-              ) : -cushion < 1 ? (
-                <>
-                  Costs would need to fall <strong>{percent(-cushion)}</strong>{' '}
-                  for this stage to break even.
-                </>
-              ) : (
-                <>Cutting these costs alone cannot make this stage break even.</>
-              )}
-            </p>
-          ) : null}
-          <div className="cost-pressure-summary">
-            <span>
-              Costs −10%
-              <strong>{currency(sensitivity[0].profit)}</strong>
-            </span>
-            <span>
-              Current
-              <strong>{currency(sensitivity[1].profit)}</strong>
-            </span>
-            <span>
-              Costs +10%
-              <strong>{currency(sensitivity[2].profit)}</strong>
+        <div className="expense-mix">
+          <div className="expense-mix-head">
+            <span className="label">Where every cost dollar goes</span>
+            <span className="detail">
+              {compactCurrency(expenseTotal)} total
             </span>
           </div>
-          <p className="stage-visual-note">
-            Holds revenue and cattle purchase price constant to isolate this
-            stage’s operating and overhead costs.
-          </p>
+          <div
+            className="expense-mix-bar"
+            aria-label={expenseMix
+              .map(
+                (item) =>
+                  `${item.label}: ${Math.round((item.value / expenseTotal) * 100)}%`,
+              )
+              .join('; ')}
+          >
+            {expenseMix.map((item) => (
+              <span
+                key={item.label}
+                style={{
+                  width: `${(item.value / expenseTotal) * 100}%`,
+                  background: item.color,
+                }}
+              />
+            ))}
+          </div>
+          <ul className="expense-mix-key">
+            {expenseMix.map((item) => (
+              <li key={item.label}>
+                <span style={{ background: item.color }} aria-hidden="true" />
+                {item.label}
+                <strong>
+                  {Math.round((item.value / expenseTotal) * 100)}%
+                </strong>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 

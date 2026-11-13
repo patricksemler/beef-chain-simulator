@@ -64,7 +64,7 @@ export function Flow({ result }: { result: SimulationSummary }) {
 
   return (
     <>
-      <section className="panel flow-panel" aria-labelledby="flow-heading">
+      <section className="panel" aria-labelledby="flow-heading">
         <div className="panel-header flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="flow-heading" className="panel-title">
             Cattle flow
@@ -75,10 +75,6 @@ export function Flow({ result }: { result: SimulationSummary }) {
         </div>
 
         <div className="flow-summary">
-          <div className="flow-summary-head">
-            <span className="label">Current chain status</span>
-            <span className="detail">share of calves started</span>
-          </div>
           <figure
             className="flow-summary-bar"
             aria-label={chainStatus
@@ -113,38 +109,6 @@ export function Flow({ result }: { result: SimulationSummary }) {
           </ul>
         </div>
 
-        <ol className="flow-track">
-          {PHASE_ORDER.map((key, index) => {
-            const phase = result.phases[key];
-            const share = phase.exitedHead / entered;
-            const exitVerb =
-              index === PHASE_ORDER.length - 1 ? 'sold' : 'moved on';
-            return (
-              <li key={key} className="flow-node">
-                <p className="label flow-label">{phase.label}</p>
-                <p className="flow-value">{whole(phase.exitedHead)}</p>
-                <div className="flow-bar">
-                  <span
-                    className="flow-bar-fill"
-                    style={{
-                      width: `${Math.max(share * 100, 1)}%`,
-                      background: PHASE_META[key].color,
-                    }}
-                  />
-                </div>
-                <p className="detail flow-detail">
-                  {percent(share)} {exitVerb}
-                  {phase.averageExitWeight > 0 ? (
-                    <span className="block">
-                      {whole(phase.averageExitWeight)} lb
-                    </span>
-                  ) : null}
-                </p>
-              </li>
-            );
-          })}
-        </ol>
-
         <dl className="stat-strip">
           <StatItem
             label="Calf to retail"
@@ -160,9 +124,10 @@ export function Flow({ result }: { result: SimulationSummary }) {
           />
           <StatItem label="Died" value={whole(result.mortalityHead)} />
         </dl>
+
+        <StageOutcomes result={result} />
       </section>
 
-      <StageOutcomes result={result} />
       <JourneyTimeline result={result} journeyDays={journeyDays} />
     </>
   );
@@ -177,17 +142,9 @@ function StageOutcomes({ result }: { result: SimulationSummary }) {
   const lastKey = PHASE_ORDER[PHASE_ORDER.length - 1];
 
   return (
-    <section className="panel card-panel" aria-labelledby="outcomes-heading">
-      <div className="panel-header">
-        <h2 id="outcomes-heading" className="panel-title">
-          What happened at each stage
-        </h2>
-        <p className="panel-subtitle">
-          Bar length is the share of all calves that reached the stage
-        </p>
-      </div>
-
-      <div className="outcome-chart">
+    <div className="outcome-section" aria-labelledby="outcomes-heading">
+      <div className="outcome-head">
+        <h3 id="outcomes-heading">By stage</h3>
         <ul className="driver-key" aria-hidden="true">
           <li>
             <span
@@ -199,13 +156,16 @@ function StageOutcomes({ result }: { result: SimulationSummary }) {
           </li>
           <li>
             <span style={{ background: STILL_HERE_COLOR }} />
-            Still here when the period ends
+            Still in the stage at period end
           </li>
           <li>
             <span style={{ background: 'var(--negative)' }} />
             Died
           </li>
         </ul>
+      </div>
+
+      <div className="outcome-chart">
         {PHASE_ORDER.map((key) => {
           const phase = result.phases[key];
           const segments = [
@@ -253,23 +213,26 @@ function StageOutcomes({ result }: { result: SimulationSummary }) {
                 <small> in</small>
               </span>
               <p className="outcome-counts" aria-hidden="true">
-                {segments
-                  .filter((segment) => segment.value > 0)
-                  .map(
-                    (segment) =>
-                      `${whole(segment.value)} ${segment.name.toLowerCase()}`,
-                  )
+                {[
+                  ...segments
+                    .filter((segment) => segment.value > 0)
+                    .map(
+                      (segment) =>
+                        `${whole(segment.value)} ${segment.name.toLowerCase()}`,
+                    ),
+                  ...(phase.averageExitWeight > 0
+                    ? [`${whole(phase.averageExitWeight)} lb out`]
+                    : []),
+                ]
+                  // Each count stays on one line; wraps fall between them.
+                  .map((item) => item.replaceAll(' ', '\u00a0'))
                   .join(' · ')}
               </p>
             </div>
           );
         })}
       </div>
-      <p className="panel-note">
-        Cattle still in a stage when the period ends are counted at their
-        current value, not sold.
-      </p>
-    </section>
+    </div>
   );
 }
 

@@ -48,7 +48,6 @@ export function Sectors({ result }: { result: SimulationSummary }) {
         <h2 id="sectors-heading" className="panel-title">
           Profit by stage
         </h2>
-        <p className="panel-subtitle">Who in the chain makes or loses money</p>
       </div>
 
       <div className="sector-summary">
@@ -100,7 +99,7 @@ export function Sectors({ result }: { result: SimulationSummary }) {
         ))}
         <div className="sector-summary-row sector-summary-total">
           <span className="sector-summary-label">Whole chain</span>
-          <span className="detail">Sum of the five stages</span>
+          <span aria-hidden="true" />
           <span
             className={`sector-summary-value ${
               result.chainEconomicProfit < 0

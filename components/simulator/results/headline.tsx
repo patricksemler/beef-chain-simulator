@@ -87,10 +87,6 @@ export function Headline({ result }: { result: SimulationSummary }) {
             high={result.chainP90}
             domain={domain}
           />
-          <p className="detail mt-2">
-            8 in 10 runs fall between {compactCurrency(result.chainP10)} and{' '}
-            {compactCurrency(result.chainP90)}.
-          </p>
         </div>
         {unsoldValue > 0 ? (
           <p className="headline-note">

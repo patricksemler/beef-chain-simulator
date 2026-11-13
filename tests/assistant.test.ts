@@ -179,7 +179,7 @@ describe('dashboard state description', () => {
     for (const driver of result.sensitivity) {
       expect(text).toContain(`- ${driver.label}: 10% lower →`);
     }
-    expect(text).toContain('"What happened at each stage" card');
+    expect(text).toContain('"By stage" chart');
   });
 
   it('flags stale results and names the edited inputs', () => {

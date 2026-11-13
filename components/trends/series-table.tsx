@@ -133,13 +133,17 @@ export function SeriesTable({ selected, from, through }: SeriesTableProps) {
         </table>
       </div>
 
-      {view === 'change' && (
-        <div className="heat-key" aria-hidden="true">
-          <span>−{HEAT_CLAMP}% or more</span>
-          <span className="heat-key-ramp" />
-          <span>+{HEAT_CLAMP}% or more</span>
-        </div>
-      )}
+      {/* Always rendered, only hidden for prices, so switching views never
+          changes the height of the section. */}
+      <div
+        className="heat-key"
+        aria-hidden="true"
+        style={{ visibility: view === 'change' ? 'visible' : 'hidden' }}
+      >
+        <span>−{HEAT_CLAMP}% or more</span>
+        <span className="heat-key-ramp" />
+        <span>+{HEAT_CLAMP}% or more</span>
+      </div>
     </div>
   );
 }

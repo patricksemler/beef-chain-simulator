@@ -31,12 +31,10 @@
  * ## Helpful notes
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
-import { SteerMark } from '@/components/site/hand-drawn';
 import { lazy, Suspense, useCallback, useState } from 'react';
-import { Home, LineChart } from 'lucide-react';
 import { ResultsDashboard } from '@/components/simulator/results';
 import { ScenarioPanel } from '@/components/simulator/scenario-panel';
-import { ThemeToggle } from '@/components/site/theme-toggle';
+import { SiteHeader } from '@/components/site/site-header';
 import { hasStaleDisplayedResult } from '@/lib/dashboard';
 import type {
   DashboardSnapshot,
@@ -57,7 +55,7 @@ export default function SimulatorPage() {
     useState<ResultsPage>('profit');
   const [openScenarioSections, setOpenScenarioSections] = useState<
     ScenarioSection[]
-  >(['prices']);
+  >([]);
 
   const getSnapshot = useCallback(
     (): DashboardSnapshot => ({
@@ -86,36 +84,9 @@ export default function SimulatorPage() {
       <a href="#results" className="skip-link">
         Skip to results
       </a>
-      <header className="app-header">
-        <div className="app-header-inner">
-          <h1 className="app-title">
-            <a href="/" className="app-brand">
-              <SteerMark className="site-brand-mark" />
-              Beef Chain Simulator
-            </a>
-            <span className="app-subtitle">
-              U.S. supply chain planning model
-            </span>
-          </h1>
-          {/* Plain anchors: the static export has no working client router. */}
-          <div className="site-header-actions">
-            <nav className="simulator-nav" aria-label="Site">
-              <a href="/">
-                <Home size={15} aria-hidden="true" />
-                <span className="sr-only min-[640px]:not-sr-only">Home</span>
-              </a>
-              <a href="/trends">
-                <LineChart size={15} aria-hidden="true" />
-                <span className="sr-only min-[640px]:not-sr-only">
-                  Market trends
-                </span>
-              </a>
-            </nav>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <SiteHeader current="simulator" wide />
       <main className="app-body">
+        <h1 className="sr-only">Beef Chain Simulator</h1>
         <ScenarioPanel
           scenario={simulation.scenario}
           setScenario={simulation.setScenario}

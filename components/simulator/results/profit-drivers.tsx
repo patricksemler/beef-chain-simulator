@@ -70,7 +70,7 @@ export function ProfitDrivers({ result }: { result: SimulationSummary }) {
             What moves profit most
           </h2>
           <p className="panel-subtitle">
-            Change in profit if one input moves 10%, all else unchanged
+            Change in profit when one input moves 10%
           </p>
         </div>
         <SelectField
@@ -130,7 +130,7 @@ export function ProfitDrivers({ result }: { result: SimulationSummary }) {
           No effect {scope === 'chain' ? 'on the whole chain' : 'on this stage'}
           : {flat.map((row) => row.label.toLowerCase()).join(', ')}.
           {scope === 'chain'
-            ? ' Prices paid between stages are one stage’s cost and the next one’s revenue, so they cancel out across the chain. Pick a stage to see them.'
+            ? ' One stage’s cost is the next one’s revenue, so these cancel out across the chain.'
             : ''}
         </p>
       ) : null}

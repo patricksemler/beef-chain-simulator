@@ -15,7 +15,10 @@ import {
   RangeScale,
   domainAcross,
 } from '@/components/simulator/results/range-bar';
-import { StageEconomics } from '@/components/simulator/results/stage-economics';
+import {
+  STAGE_STORY,
+  StageEconomics,
+} from '@/components/simulator/results/stage-economics';
 import { LOSS_WARNING_SHARE, lossChanceLabel } from '@/lib/dashboard';
 import { compactCurrency, currency, percent } from '@/lib/model/format';
 import type { PhaseKey, SimulationSummary } from '@/lib/model/types';
@@ -37,8 +40,9 @@ export function StageDetails({ result }: { result: SimulationSummary }) {
           <h2 id="stage-details-heading" className="panel-title">
             Stage details
           </h2>
-          <p className="panel-subtitle">
-            Pick a stage to see where its money comes from and goes
+          <p className="panel-subtitle" aria-live="polite">
+            Earns from {STAGE_STORY[selectedKey].source.toLowerCase()}; pays
+            for {STAGE_STORY[selectedKey].work.toLowerCase()}.
           </p>
         </div>
         <div className="stage-picker" aria-label="Beef chain stage">
@@ -69,9 +73,8 @@ export function StageDetails({ result }: { result: SimulationSummary }) {
             negative={phase.economicProfit < 0}
           />
           <SnapshotStat
-            label="Per animal"
+            label="Per head"
             value={currency(perAnimal)}
-            detail="entering this stage"
             negative={perAnimal < 0}
           />
           <SnapshotStat label="Margin" value={percent(phase.margin)} />
@@ -106,8 +109,7 @@ export function StageDetails({ result }: { result: SimulationSummary }) {
 
       <div className="stage-compare">
         <div className="stage-compare-head">
-          <h3>All stages side by side</h3>
-          <p>Select a row to open that stage above.</p>
+          <h3>All stages</h3>
         </div>
         <div className="overflow-x-auto">
           <Table>

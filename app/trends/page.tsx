@@ -47,23 +47,12 @@ export default function TrendsPage() {
           <h1 id="trends-title">Market trends</h1>
           <p>
             USDA annual averages, {FIRST_YEAR} to {LAST_YEAR}, in nominal
-            dollars (not adjusted for inflation). Pick a point in the chain,
-            then a window of years.
+            dollars. Pick a series, then a range of years. Any of these years
+            can be loaded into the <a href="/simulator">simulator</a>.
           </p>
         </section>
 
         <TrendsDashboard />
-
-        <section className="site-section trends-next" aria-label="Next step">
-          <p>
-            Choose any of these years under &ldquo;Market year&rdquo; in the
-            simulator to load its prices and costs, with your own herd on top of
-            it.
-          </p>
-          <a href="/simulator" className="button button-primary">
-            Open the simulator
-          </a>
-        </section>
       </main>
 
       <SiteFooter />

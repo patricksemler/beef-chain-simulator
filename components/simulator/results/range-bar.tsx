@@ -122,16 +122,45 @@ export function RangeScale({
   const lowAt = position(low, domain);
   const highAt = position(high, domain);
   const zeroAt = position(0, domain);
-  const showZero =
-    Math.abs(zeroAt - lowAt) > 9 && Math.abs(zeroAt - highAt) > 9;
+  // Two labels need about a third of the track to sit side by side on a
+  // phone; closer than that, one label under the band names both ends.
+  const together = Math.abs(highAt - lowAt) < 34;
+  const midAt = (lowAt + highAt) / 2;
+  const labelAt = midAt > 50 ? highAt : lowAt;
+  const showZero = together
+    ? midAt > 50
+      ? zeroAt < labelAt - 45
+      : zeroAt > labelAt + 45
+    : Math.abs(zeroAt - lowAt) > 9 && Math.abs(zeroAt - highAt) > 9;
 
   return (
     <div className="range-scale">
-      <ScaleMark at={lowAt} title="P10" value={compactCurrency(low)} />
+      {together ? (
+        // Hang the label off the band end nearer the middle, so it opens
+        // toward the free side of the track instead of off its edge.
+        <ScaleMark
+          at={labelAt}
+          align={midAt > 50 ? 'end' : 'start'}
+          title="8 in 10 runs (P10–P90)"
+          value={`${compactCurrency(low)} to ${compactCurrency(high)}`}
+        />
+      ) : (
+        <>
+          <ScaleMark
+            at={lowAt}
+            title="Low (P10)"
+            value={compactCurrency(low)}
+          />
+          <ScaleMark
+            at={highAt}
+            title="High (P90)"
+            value={compactCurrency(high)}
+          />
+        </>
+      )}
       {showZero ? (
         <ScaleMark at={zeroAt} title="Break-even" value="$0" muted />
       ) : null}
-      <ScaleMark at={highAt} title="P90" value={compactCurrency(high)} />
     </div>
   );
 }
@@ -141,15 +170,22 @@ function ScaleMark({
   title,
   value,
   muted = false,
+  align,
 }: {
   at: number;
   title: string;
   value: string;
   muted?: boolean;
+  align?: 'start' | 'end';
 }) {
   // Anchor centred marks on their value, but pin the outermost ones inside the
   // track so they cannot bleed past its edges.
-  const anchor = at <= 6 ? 0 : at >= 94 ? -100 : -50;
+  const anchor =
+    align === 'start' || (!align && at <= 6)
+      ? 0
+      : align === 'end' || at >= 94
+        ? -100
+        : -50;
   return (
     <span
       className="range-scale-mark"

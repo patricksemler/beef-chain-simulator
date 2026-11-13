@@ -9,14 +9,21 @@ const NAV_LINKS: readonly { page: SitePage; href: string; label: string }[] = [
 ];
 
 /**
- * Header for the public pages: a full-width maroon band. Links are plain
- * anchors on purpose: the site is a static export of three separate documents,
- * and the framework's client router does not survive that build, so a full
- * page load is the reliable path.
+ * The one header for every page: a maroon band with the brand, two links and
+ * the theme toggle. `wide` spans the window for the simulator's full-width
+ * layout. Links are plain anchors on purpose: the site is a static export of
+ * three separate documents, and the framework's client router does not
+ * survive that build, so a full page load is the reliable path.
  */
-export function SiteHeader({ current }: { current: SitePage }) {
+export function SiteHeader({
+  current,
+  wide = false,
+}: {
+  current: SitePage;
+  wide?: boolean;
+}) {
   return (
-    <header className="site-header">
+    <header className="site-header" data-wide={wide || undefined}>
       <div className="site-header-inner">
         <a
           href="/"
@@ -24,7 +31,7 @@ export function SiteHeader({ current }: { current: SitePage }) {
           aria-current={current === 'home' ? 'page' : undefined}
         >
           <SteerMark className="site-brand-mark" />
-          Beef Chain Simulator
+          <span className="site-brand-name">Beef Chain Simulator</span>
         </a>
         <div className="site-header-actions">
           <nav className="site-nav" aria-label="Site">
