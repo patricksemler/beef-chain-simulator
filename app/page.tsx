@@ -29,6 +29,7 @@
  * ## Helpful notes
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
+import { ChainSketch } from '@/components/site/hand-drawn';
 import { SiteFooter } from '@/components/site/site-footer';
 import { SiteHeader } from '@/components/site/site-header';
 import { ChainLedger } from '@/components/trends/chain-ledger';
@@ -58,7 +59,8 @@ export default function Home() {
       <main className="site-main">
         <section className="hero" aria-labelledby="hero-title">
           <h1 id="hero-title">
-            Cattle economics, from the pasture to the meat case.
+            Cattle economics, from the pasture to the{' '}
+            <span className="hand-underline">meat case.</span>
           </h1>
           <div className="hero-aside">
             <p className="hero-lede">
@@ -82,6 +84,7 @@ export default function Home() {
         </section>
 
         <section className="site-section" aria-label="The beef chain">
+          <ChainSketch />
           <ChainLedger />
           <p className="ledger-more">
             <a href="/trends">
@@ -96,9 +99,14 @@ export default function Home() {
         >
           <h2 id="capabilities-title">What the model does</h2>
           <dl className="capabilities-list">
-            {CAPABILITIES.map(({ title, body }) => (
+            {CAPABILITIES.map(({ title, body }, index) => (
               <div key={title}>
-                <dt>{title}</dt>
+                <dt>
+                  <span className="capability-number" aria-hidden="true">
+                    {index + 1}
+                  </span>
+                  {title}
+                </dt>
                 <dd>{body}</dd>
               </div>
             ))}

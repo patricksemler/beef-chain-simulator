@@ -10,7 +10,9 @@ import {
   YAxis,
 } from 'recharts';
 import {
+  formatChange,
   formatValue,
+  percentChange,
   SERIES,
   type SeriesKey,
   type SeriesRow,
@@ -52,7 +54,36 @@ type TrendChartProps = {
 export function TrendChart({ rows, series }: TrendChartProps) {
   const meta = SERIES[series];
   const tickFormatter = (value: number) => formatValue(series, value);
-  const dot = { r: 3.5, fill: 'var(--surface)', stroke: meta.color, strokeWidth: 2 };
+  const dot = {
+    r: 3.5,
+    fill: 'var(--surface)',
+    stroke: meta.color,
+    strokeWidth: 2,
+  };
+  const first = rows[0];
+  const last = rows[rows.length - 1];
+  const change = percentChange(first[series], last[series]);
+  // A handwritten note beside the last point, like a pencil mark on a printout.
+  const endNote = (props: {
+    x?: number | string;
+    y?: number | string;
+    index?: number;
+  }) => {
+    if (props.index !== rows.length - 1 || rows.length < 2) return null;
+    const x = Number(props.x);
+    const y = Number(props.y);
+    return (
+      <text
+        key="end-note"
+        className="chart-hand-note"
+        x={x - 14}
+        y={y + (change < 0 ? 28 : -14)}
+        textAnchor="end"
+      >
+        {formatChange(change)} since {first.year}
+      </text>
+    );
+  };
 
   return (
     <figure
@@ -89,9 +120,10 @@ export function TrendChart({ rows, series }: TrendChartProps) {
             type="linear"
             dataKey={series}
             stroke={meta.color}
-            strokeWidth={2}
+            strokeWidth={2.75}
             dot={dot}
             activeDot={ACTIVE_DOT}
+            label={endNote}
             isAnimationActive={false}
           />
         </LineChart>

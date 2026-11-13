@@ -30,7 +30,14 @@
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
 import SimulatorPage from '@/components/simulator/simulator-page';
+import { siteFontClassName } from '@/lib/site-fonts';
 
 export default function SimulatorRoute() {
-  return <SimulatorPage />;
+  // `display: contents` keeps the wrapper out of layout; it only carries the
+  // font variables down to the simulator.
+  return (
+    <div className={siteFontClassName} style={{ display: 'contents' }}>
+      <SimulatorPage />
+    </div>
+  );
 }

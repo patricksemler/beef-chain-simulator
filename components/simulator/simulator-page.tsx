@@ -31,6 +31,7 @@
  * ## Helpful notes
  * The goal here is to keep the code simple, clear, and easy to maintain without changing how the app behaves.
  */
+import { SteerMark } from '@/components/site/hand-drawn';
 import { lazy, Suspense, useCallback, useState } from 'react';
 import { Home, LineChart } from 'lucide-react';
 import { ResultsDashboard } from '@/components/simulator/results';
@@ -88,7 +89,10 @@ export default function SimulatorPage() {
       <header className="app-header">
         <div className="app-header-inner">
           <h1 className="app-title">
-            Beef Chain Simulator
+            <a href="/" className="app-brand">
+              <SteerMark className="site-brand-mark" />
+              Beef Chain Simulator
+            </a>
             <span className="app-subtitle">
               U.S. supply chain planning model
             </span>

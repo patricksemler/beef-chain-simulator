@@ -31,6 +31,7 @@
  */
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { HandDrawnFilters } from '@/components/site/hand-drawn';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import './globals.css';
 
@@ -54,7 +55,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <HandDrawnFilters />
+        {children}
+      </body>
     </html>
   );
 }
